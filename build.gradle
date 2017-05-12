@@ -1,0 +1,40 @@
+plugins {
+  id 'org.jetbrains.kotlin.jvm' version '1.1.2'
+  id 'org.springframework.boot' version '1.5.3.RELEASE'
+}
+
+repositories {
+  mavenCentral()
+}
+
+ext.kotlin_version = '1.1.2'
+
+version = '1.0.0-SNAPSHOT'
+
+dependencies {
+  compile 'org.apache.httpcomponents:httpclient',
+    'com.fasterxml.jackson.datatype:jackson-datatype-jsr310',
+    'com.fasterxml.jackson.module:jackson-module-kotlin',
+    "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version",
+    'org.springframework.boot:spring-boot-starter-actuator',
+    'org.springframework.boot:spring-boot-starter-integration',
+    'org.springframework.boot:spring-boot-starter-web',
+    'org.springframework.boot:spring-boot-starter-websocket',
+    'org.springframework.integration:spring-integration-http'
+
+  testCompile 'junit:junit',
+    'org.springframework:spring-test'
+}
+
+processResources {
+  expand(project.properties)
+}
+
+jar {
+  manifest {
+    attributes(
+      "Implementation-Title": rootProject.name,
+      "Implementation-Version": version
+    )
+  }
+}
