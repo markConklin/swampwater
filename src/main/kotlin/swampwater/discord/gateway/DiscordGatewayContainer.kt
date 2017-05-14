@@ -118,7 +118,7 @@ open class DiscordGatewayContainer(val gatewayUrl: URI, val authorization: Strin
         config.userProperties.applicationContext = applicationContext
     }
 
-    open fun send(dispatch: Dispatch) {
+    fun send(dispatch: Dispatch) {
         sendLimiter.submit { session!!.basicRemote.sendObject(dispatch) }
     }
 

@@ -8,7 +8,7 @@ import java.util.zip.InflaterInputStream
 import javax.websocket.Decoder
 import javax.websocket.EndpointConfig
 
-open class JacksonBinaryDecoder : Decoder.Binary<Dispatch> {
+class JacksonBinaryDecoder : Decoder.Binary<Dispatch> {
     private lateinit var objectMapper: ObjectMapper
 
     override fun init(config: EndpointConfig) {

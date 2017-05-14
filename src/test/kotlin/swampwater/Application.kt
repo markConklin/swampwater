@@ -20,12 +20,14 @@ import org.springframework.integration.http.inbound.HttpRequestHandlingMessaging
 import org.springframework.integration.http.inbound.RequestMapping
 import org.springframework.integration.scheduling.PollerMetadata
 import org.springframework.integration.scheduling.PollerMetadata.DEFAULT_POLLER
-import org.springframework.integration.selector.PayloadTypeSelector
 import org.springframework.messaging.MessageChannel
 import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler
 import org.springframework.scheduling.support.PeriodicTrigger
 import org.springframework.web.util.UriComponentsBuilder.fromUriString
-import swampwater.discord.*
+import swampwater.discord.CreateMessage
+import swampwater.discord.GameStatusUpdate
+import swampwater.discord.Gateway
+import swampwater.discord.Op
 import swampwater.discord.gateway.DiscordGatewayContainer
 import swampwater.discord.gateway.DiscordGatewayMessageHandler
 import swampwater.discord.gateway.DiscordGatewayMessageProducer
@@ -88,16 +90,14 @@ open class Application(
     open fun gatewayInboundFlow(): IntegrationFlow {
         return from(inboundMessageProducer())
                 .channel("discord.gateway.inbound")
-                .filter(PayloadTypeSelector(Message::class.java, Ready::class.java))
-                .route(Message::class.java, { if (Regex("^tell me a joke").matches(it.content)) "joke" else "ack" }, { it.suffix(".inbound") })
                 .get()
     }
 
-    @Bean("discord.message.outbound")
-    open fun discordMessageOutbound() = QueueChannel()
-
     @Bean
     open fun outboundMessageHandler() = RateLimitingHttpMessageHandler(restTemplate).apply { url = "/channels/#{headers['channel']}/messages" }
+
+    @Bean("discord.message.outbound")
+    open fun discordMessageOutbound() = QueueChannel()
 
     @Bean
     open fun messageOutboundFlow(): IntegrationFlow = from(discordMessageOutbound())
@@ -108,7 +108,7 @@ open class Application(
             .get()
 
     @Bean
-    open fun httpGate() = HttpRequestHandlingMessagingGateway(false).apply {
+    open fun httpStatusProducer() = HttpRequestHandlingMessagingGateway(false).apply {
         setRequestPayloadType(SetStatusRequest::class.java)
         requestChannel = statusChannel()
         requestMapping = RequestMapping().apply {
@@ -121,7 +121,7 @@ open class Application(
     open fun statusChannel(): MessageChannel = MessageChannels.direct().get()
 
     @Bean
-    open fun statusUpdateChannel(): IntegrationFlow = IntegrationFlows.from(statusChannel())
+    open fun statusUpdateFlow(): IntegrationFlow = IntegrationFlows.from(statusChannel())
             .transform { it: SetStatusRequest -> GameStatusUpdate(it.idle, it.game) }
             .enrichHeaders(mutableMapOf(DiscordMessageHeaderAccessor.Op to Op.StatusUpdate as Any))
             .handle(outboundGatewayHandler())
