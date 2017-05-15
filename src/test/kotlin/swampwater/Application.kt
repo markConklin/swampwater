@@ -18,16 +18,15 @@ import org.springframework.integration.dsl.channel.MessageChannels
 import org.springframework.integration.dsl.support.Transformers.toJson
 import org.springframework.integration.http.inbound.HttpRequestHandlingMessagingGateway
 import org.springframework.integration.http.inbound.RequestMapping
+import org.springframework.integration.router.AbstractMessageRouter
+import org.springframework.integration.router.PayloadTypeRouter
 import org.springframework.integration.scheduling.PollerMetadata
 import org.springframework.integration.scheduling.PollerMetadata.DEFAULT_POLLER
 import org.springframework.messaging.MessageChannel
 import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler
 import org.springframework.scheduling.support.PeriodicTrigger
 import org.springframework.web.util.UriComponentsBuilder.fromUriString
-import swampwater.discord.CreateMessage
-import swampwater.discord.GameStatusUpdate
-import swampwater.discord.Gateway
-import swampwater.discord.Op
+import swampwater.discord.*
 import swampwater.discord.gateway.DiscordGatewayContainer
 import swampwater.discord.gateway.DiscordGatewayMessageHandler
 import swampwater.discord.gateway.DiscordGatewayMessageProducer
@@ -89,7 +88,28 @@ open class Application(
     @Bean
     open fun gatewayInboundFlow(): IntegrationFlow {
         return from(inboundMessageProducer())
-                .channel("discord.gateway.inbound")
+                .route(router())
+                .get()
+    }
+
+    @Bean
+    open fun router(): AbstractMessageRouter {
+        return PayloadTypeRouter().apply {
+            setDefaultOutputChannelName("nullChannel")
+            setPrefix("discord.")
+            setSuffix(".inbound")
+            channelMappings = mapOf(
+                    Message::class.java.name to Message::class.java.simpleName.decapitalize(),
+                    Ready::class.java.name to Ready::class.java.simpleName.decapitalize()
+            )
+        }
+    }
+
+    @Bean
+    open fun addChannelHeader(): IntegrationFlow {
+        return IntegrationFlows.from("discord.message.inbound")
+                .enrichHeaders { it.headerExpression("channel", "payload.channelId") }
+                .channel("message.inbound")
                 .get()
     }
 

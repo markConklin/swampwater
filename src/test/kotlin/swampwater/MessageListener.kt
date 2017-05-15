@@ -1,5 +1,6 @@
 package swampwater
 
+import org.springframework.integration.annotation.Filter
 import org.springframework.integration.annotation.Router
 import org.springframework.integration.annotation.ServiceActivator
 import org.springframework.stereotype.Component
@@ -9,34 +10,22 @@ import swampwater.discord.User
 import java.util.concurrent.ThreadLocalRandom
 
 @Component
-open class MessageListener(val gateway: DiscordGateway, val jokes: MutableList<Joke>) {
+open class MessageListener(val jokes: MutableList<Joke>) {
     private lateinit var self: User
 
-    @Router(inputChannel = "discord.gateway.inbound", suffix = ".inbound")
-    fun route(message: org.springframework.messaging.Message<*>): String {
-        val payload: Any = message.payload
-        return when (payload) {
-            is Message -> if (Regex("^tell me a joke").matches(payload.content)) "joke" else "ack"
-            is Ready -> "ready"
-            else -> "nullChannel"
-        }
-    }
+    @Filter(inputChannel = "message.inbound", outputChannel = "event.inbound")
+    fun filter(message: Message): Boolean = message.author.id != self.id
 
-    @ServiceActivator(inputChannel = "joke.inbound")
-    fun joke(message: Message) {
-        if (message.author.id == self.id) return
-        jokes[ThreadLocalRandom.current().nextInt(jokes.size)].apply {
-            gateway.sendMessage(message.channelId, setup, punchline)
-        }
-    }
+    @Router(inputChannel = "event.inbound")
+    fun route(message: Message): String = if (Regex("^tell me a joke").matches(message.content)) "joke.inbound" else "ack.inbound"
 
-    @ServiceActivator(inputChannel = "ack.inbound")
-    fun ack(message: Message) {
-        if (message.author.id == self.id) return
-        gateway.sendMessage(message.channelId, "\"${message.content}\" received\n")
-    }
+    @ServiceActivator(inputChannel = "joke.inbound", outputChannel = "discord.message.outbound")
+    fun joke(message: Message) = jokes[ThreadLocalRandom.current().nextInt(jokes.size)].let { listOf(it.setup, it.punchline) }
 
-    @ServiceActivator(inputChannel = "ready.inbound")
+    @ServiceActivator(inputChannel = "ack.inbound", outputChannel = "discord.message.outbound")
+    fun ack(message: Message) = "\"${message.content}\" received\n"
+
+    @ServiceActivator(inputChannel = "discord.ready.inbound")
     fun ready(ready: Ready) {
         self = ready.user
     }
