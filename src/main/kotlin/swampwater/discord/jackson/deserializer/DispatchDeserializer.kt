@@ -13,10 +13,14 @@ object DispatchDeserializer : StdDeserializer<Dispatch>(Dispatch::class.java) {
                     "GUILD_CREATE" to Guild::class.java,
                     "MESSAGE_CREATE" to Message::class.java,
                     "READY" to Ready::class.java,
-                    "TYPING_START" to TypingStart::class.java
+                    "TYPING_START" to TypingStart::class.java,
+                    "PRESENCE_UPDATE" to PresenceUpdate::class.java
             ),
             Op.Hello to mapOf(
                     null to Hello::class.java
+            ),
+            Op.InvalidSession to mapOf(
+                    null to Boolean::class.java
             )
     )
 

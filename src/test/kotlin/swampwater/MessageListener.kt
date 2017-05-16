@@ -13,7 +13,7 @@ import java.util.concurrent.ThreadLocalRandom
 open class MessageListener(val jokes: MutableList<Joke>) {
     private lateinit var self: User
 
-    @Filter(inputChannel = "message.inbound", outputChannel = "event.inbound")
+    @Filter(inputChannel = "discord.message.inbound", outputChannel = "event.inbound")
     fun filter(message: Message): Boolean = message.author.id != self.id
 
     @Router(inputChannel = "event.inbound")
