@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpHeaders.AUTHORIZATION
 import org.springframework.http.HttpMethod.POST
 import org.springframework.http.client.ClientHttpRequestInterceptor
-import org.springframework.integration.channel.QueueChannel
 import org.springframework.integration.config.EnableIntegration
 import org.springframework.integration.dsl.IntegrationFlow
 import org.springframework.integration.dsl.IntegrationFlows
@@ -76,22 +75,17 @@ open class Application(
     open fun outboundGatewayHandler() = DiscordGatewayMessageHandler(gatewayContainer())
 
     @Bean
-    open fun gatewayOutboundFlow(): IntegrationFlow = from("discord.gateway.outbound")
-            .handle(outboundGatewayHandler())
-            .get()
+    open fun inboundGatewayProducer() = DiscordGatewayMessageProducer().apply { gatewayContainer().eventHandler = this }
 
     @Bean
-    open fun inboundMessageProducer() = DiscordGatewayMessageProducer().apply { gatewayContainer().eventHandler = this }
-
-    @Bean
-    open fun gatewayInboundFlow(): IntegrationFlow = from(inboundMessageProducer())
+    open fun gatewayInboundFlow(): IntegrationFlow = from(inboundGatewayProducer())
             .route<Any, String>({ p -> p.javaClass.name },
                     { m ->
                         m
                                 .channelMapping(Ready::class.java.name, "discord.${Ready::class.java.simpleName.decapitalize()}.inbound")
                                 .subFlowMapping(Message::class.java.name, { sf ->
                                     sf
-                                            .enrichHeaders { he -> he.headerExpression("channel", "payload.channelId") }
+                                            .enrichHeaders { he -> he.headerExpression("discord-channel", "payload.channelId") }
                                             .channel("discord.${Message::class.java.simpleName.decapitalize()}.inbound")
                                 })
                                 .resolutionRequired(false)
@@ -100,10 +94,10 @@ open class Application(
             .get()
 
     @Bean
-    open fun outboundMessageHandler() = RateLimitingHttpMessageHandler(restTemplate).apply { url = "/channels/#{headers['channel']}/messages" }
+    open fun outboundMessageHandler() = RateLimitingHttpMessageHandler(restTemplate).apply { url = "/channels/#{headers['discord-channel']}/messages" }
 
     @Bean("discord.message.outbound")
-    open fun discordMessageOutbound() = QueueChannel()
+    open fun discordMessageOutbound(): MessageChannel = MessageChannels.queue().get()
 
     @Bean
     open fun messageOutboundFlow(): IntegrationFlow = from(discordMessageOutbound())
@@ -116,7 +110,6 @@ open class Application(
     @Bean
     open fun httpStatusProducer() = HttpRequestHandlingMessagingGateway(false).apply {
         setRequestPayloadType(SetStatusRequest::class.java)
-        requestChannel = statusChannel()
         requestMapping = RequestMapping().apply {
             setMethods(POST)
             setPathPatterns("/status")
@@ -124,10 +117,7 @@ open class Application(
     }
 
     @Bean
-    open fun statusChannel(): MessageChannel = MessageChannels.direct().get()
-
-    @Bean
-    open fun statusUpdateFlow(): IntegrationFlow = IntegrationFlows.from(statusChannel())
+    open fun statusUpdateFlow(): IntegrationFlow = IntegrationFlows.from(httpStatusProducer())
             .transform { it: SetStatusRequest -> GameStatusUpdate(it.idle, it.game) }
             .enrichHeaders(mutableMapOf(DiscordMessageHeaderAccessor.Op to Op.StatusUpdate as Any))
             .handle(outboundGatewayHandler())

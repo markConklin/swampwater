@@ -10,14 +10,14 @@ import swampwater.discord.User
 import java.util.concurrent.ThreadLocalRandom
 
 @Component
-open class MessageListener(val jokes: MutableList<Joke>) {
+open class MessageListener(val jokes: List<Joke>) {
     private lateinit var self: User
 
     @Filter(inputChannel = "discord.message.inbound", outputChannel = "event.inbound")
-    fun filter(message: Message): Boolean = message.author.id != self.id
+    fun filter(message: Message) = message.author.id != self.id
 
     @Router(inputChannel = "event.inbound")
-    fun route(message: Message): String = if (Regex("^tell me a joke").matches(message.content)) "joke.inbound" else "ack.inbound"
+    fun route(message: Message) = if (Regex("^tell me a joke").matches(message.content)) "joke.inbound" else "ack.inbound"
 
     @ServiceActivator(inputChannel = "joke.inbound", outputChannel = "discord.message.outbound")
     fun joke(message: Message) = jokes[ThreadLocalRandom.current().nextInt(jokes.size)].let { listOf(it.setup, it.punchline) }
