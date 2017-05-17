@@ -21,19 +21,22 @@ object DispatchDeserializer : StdDeserializer<Dispatch>(Dispatch::class.java) {
             ),
             Op.InvalidSession to mapOf(
                     null to Boolean::class.java
+            ),
+            Op.Reconnect to mapOf(
+                    null to String::class.java
             )
     )
 
     override fun deserialize(parser: JsonParser, context: DeserializationContext): Dispatch {
-        val node: JsonNode = parser.readValueAsTree()
-        val op = Op::class.java.enumConstants[node["op"].asInt()]
-        val t = node["t"].asText(null)
-        val d = node["d"]
+        val root: JsonNode = parser.readValueAsTree()
+        val op = Op::class.java.enumConstants[root["op"].asInt()]
+        val t = root["t"].asText(null)
+        val d = root["d"]
         val event = if (d is NullNode) null else {
             val type = opMapping[op]?.get(t)
             type ?: context.reportMappingException("unrecognized op/type %s/%s", op, t)
             d.traverse(parser.codec).readValueAs(type)
         }
-        return Dispatch(op, event, node["s"].asInt(), t)
+        return Dispatch(op, event, root["s"].asInt(), t)
     }
 }

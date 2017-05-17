@@ -25,7 +25,7 @@ data class Guild(
         val memberCount: Int,
         val voiceStates: List<VoiceState>,
         val members: List<Member>,
-        val channels: List<Channel>,
+        val channels: List<GuildChannel>,
         val presences: List<Any>,
         val applicationId: String?
 )

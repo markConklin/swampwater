@@ -30,7 +30,8 @@ import swampwater.discord.gateway.DiscordGatewayMessageProducer
 import swampwater.discord.gateway.DiscordMessageHeaderAccessor
 import swampwater.discord.resource.RateLimitingHttpMessageHandler
 import java.time.Clock
-import java.util.concurrent.Executors.newScheduledThreadPool
+import java.util.concurrent.Executors.newSingleThreadScheduledExecutor
+import java.util.concurrent.TimeUnit.MILLISECONDS
 
 
 @SpringBootApplication
@@ -63,10 +64,10 @@ open class Application(
     open fun clock(): Clock = Clock.systemUTC()
 
     @Bean
-    open fun scheduler() = ConcurrentTaskScheduler(newScheduledThreadPool(1))
+    open fun scheduler() = ConcurrentTaskScheduler(newSingleThreadScheduledExecutor())
 
     @Bean(DEFAULT_POLLER)
-    open fun defaultPoller() = PollerMetadata().apply { trigger = PeriodicTrigger(10) }
+    open fun defaultPoller() = PollerMetadata().apply { trigger = PeriodicTrigger(10, MILLISECONDS) }
 
     @Bean
     open fun gatewayContainer() = DiscordGatewayContainer(gatewayUrl, authorization, scheduler())
@@ -124,9 +125,11 @@ open class Application(
             .get()
 
     @Bean
-    open fun jokes(): MutableList<Joke> = objectMapper.readValue(javaClass.getResourceAsStream("/jokes.json"), objectMapper.typeFactory.constructCollectionType(MutableList::class.java, Joke::class.java))
-}
+    open fun jokes(): List<Joke> = objectMapper.readValue(javaClass.getResourceAsStream("/jokes.json"), objectMapper.typeFactory.constructCollectionType(List::class.java, Joke::class.java))
 
-fun main(vararg args: String) {
-    run(Application::class.java, *args)
+    companion object {
+        @JvmStatic fun main(args: Array<String>) {
+            run(Application::class.java, *args)
+        }
+    }
 }

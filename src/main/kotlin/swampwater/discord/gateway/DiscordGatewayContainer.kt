@@ -54,8 +54,10 @@ open class DiscordGatewayContainer(val gatewayUrl: URI, val authorization: Strin
                 }
                 Op.Reconnect -> session.close()
                 Op.InvalidSession -> {
-                    sequence = null
-                    sessionId = null
+                    if (!(event as Boolean)) {
+                        sequence = null
+                        sessionId = null
+                    }
                     session.close()
                 }
                 Op.Hello -> {

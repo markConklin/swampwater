@@ -16,11 +16,11 @@ open class MessageListener(val jokes: List<Joke>) {
     @Filter(inputChannel = "discord.message.inbound", outputChannel = "event.inbound")
     fun filter(message: Message) = message.author.id != self.id
 
-    @Router(inputChannel = "event.inbound")
-    fun route(message: Message) = if (Regex("^tell me a joke").matches(message.content)) "joke.inbound" else "ack.inbound"
+    @Router(inputChannel = "event.inbound", suffix = ".inbound")
+    fun route(message: Message) = if (Regex("^tell me a joke").matches(message.content)) "joke" else "ack"
 
     @ServiceActivator(inputChannel = "joke.inbound", outputChannel = "discord.message.outbound")
-    fun joke(message: Message) = jokes[ThreadLocalRandom.current().nextInt(jokes.size)].let { listOf(it.setup, it.punchline) }
+    fun joke() = jokes[ThreadLocalRandom.current().nextInt(jokes.size)].let { listOf(it.setup, it.punchline) }
 
     @ServiceActivator(inputChannel = "ack.inbound", outputChannel = "discord.message.outbound")
     fun ack(message: Message) = "\"${message.content}\" received\n"
