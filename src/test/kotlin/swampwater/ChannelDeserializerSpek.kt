@@ -17,9 +17,9 @@ import swampwater.discord.jackson.ObjectMapperCustomizer
 @RunWith(JUnitPlatform::class)
 class ChannelDeserializerSpek : Spek({
     given("Object Mapper with custom deserializer configuration") {
-        val builder = Jackson2ObjectMapperBuilder()
-        ObjectMapperCustomizer().customize(builder)
-        val objectMapper: ObjectMapper = builder.build()
+        val objectMapper: ObjectMapper = Jackson2ObjectMapperBuilder().apply {
+            ObjectMapperCustomizer().customize(this)
+        }.build()
         on("deserializing a DMChannel") {
             val channel: Channel = objectMapper.readValue("""
             {
@@ -40,7 +40,7 @@ class ChannelDeserializerSpek : Spek({
                 "id": "19238980",
                 "guild_id": "1029098",
                 "name": "buffalo",
-                "type": "text",
+                "type": 0,
                 "position": 2,
                 "permission_overwrites": [],
                 "last_message_id": "124545",
