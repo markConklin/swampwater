@@ -20,7 +20,10 @@ class JacksonBinaryDecoder : Decoder.Binary<Dispatch> {
     }
 
     override fun decode(bytes: ByteBuffer?): Dispatch {
-        return objectMapper.readValue(InflaterInputStream(ByteBufferBackedInputStream(bytes)), Dispatch::class.java)
+        val stream = InflaterInputStream(ByteBufferBackedInputStream(bytes))
+        stream.use {
+            return objectMapper.readValue(stream, Dispatch::class.java)
+        }
     }
 
     override fun destroy() {

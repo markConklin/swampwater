@@ -39,9 +39,9 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
 open class Application(
         builder: RestTemplateBuilder,
         val objectMapper: ObjectMapper,
-        @Value("\${discord.baseUrl}") val baseUrl: String,
+        @Value("\${discord.baseUrl}") baseUrl: String,
         @Value("Bot \${discord.authorization}") val authorization: String,
-        @Value("\${discord.gateway.version}") val version: String
+        @Value("\${discord.gateway.version}") version: String
 ) {
 
     private val restTemplate = builder

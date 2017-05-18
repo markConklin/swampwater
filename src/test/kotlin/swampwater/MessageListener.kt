@@ -3,30 +3,28 @@ package swampwater
 import org.springframework.integration.annotation.Filter
 import org.springframework.integration.annotation.Router
 import org.springframework.integration.annotation.ServiceActivator
+import org.springframework.messaging.handler.annotation.Payload
 import org.springframework.stereotype.Component
-import swampwater.discord.Message
-import swampwater.discord.Ready
 import swampwater.discord.User
 import java.util.concurrent.ThreadLocalRandom
 
 @Component
 open class MessageListener(val jokes: List<Joke>) {
-    private lateinit var self: User
+    var self: User? = null
+        @ServiceActivator(inputChannel = "discord.ready.inbound")
+        set(@Payload("user") value) {
+            field = value
+        }
 
     @Filter(inputChannel = "discord.message.inbound", outputChannel = "event.inbound")
-    fun filter(message: Message) = message.author.id != self.id
+    fun filter(@Payload("author") author: User) = author.id != self?.id
 
     @Router(inputChannel = "event.inbound", suffix = ".inbound")
-    fun route(message: Message) = if (Regex("^tell me a joke").matches(message.content)) "joke" else "ack"
+    fun route(@Payload("content") content: String) = if (Regex("^tell me a joke").matches(content)) "joke" else "ack"
 
     @ServiceActivator(inputChannel = "joke.inbound", outputChannel = "discord.message.outbound")
-    fun joke() = jokes[ThreadLocalRandom.current().nextInt(jokes.size)].let { listOf(it.setup, it.punchline) }
+    fun joke() = jokes[ThreadLocalRandom.current().nextInt(jokes.size)].toList()
 
     @ServiceActivator(inputChannel = "ack.inbound", outputChannel = "discord.message.outbound")
-    fun ack(message: Message) = "\"${message.content}\" received\n"
-
-    @ServiceActivator(inputChannel = "discord.ready.inbound")
-    fun ready(ready: Ready) {
-        self = ready.user
-    }
+    fun ack(@Payload("content") content: String) = "\"$content\" received\n"
 }
