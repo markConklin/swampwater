@@ -1,7 +1,7 @@
 package swampwater
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.assertj.core.api.Assertions.assertThat
+import org.amshove.kluent.shouldBeInstanceOf
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
@@ -32,7 +32,7 @@ class ChannelDeserializerSpek : Spek({
                 "is_private": true
             }""", Channel::class.java)
             it("should be of type DMChannel") {
-                assertThat(channel).isInstanceOf(DMChannel::class.java)
+                channel shouldBeInstanceOf DMChannel::class.java
             }
         }
         on("deserializing a TextGuildChannel") {
@@ -48,7 +48,7 @@ class ChannelDeserializerSpek : Spek({
                 "is_private": false
             }""", Channel::class.java)
             it("should be of type TextGuildChannel") {
-                assertThat(channel).isInstanceOf(TextGuildChannel::class.java)
+                channel shouldBeInstanceOf TextGuildChannel::class.java
             }
         }
         on("deserializing a VoiceGuildChannel") {
@@ -65,7 +65,7 @@ class ChannelDeserializerSpek : Spek({
                 "is_private": false
             }""", Channel::class.java)
             it("should be of type VoiceGuildChannel") {
-                assertThat(channel).isInstanceOf(VoiceGuildChannel::class.java)
+                channel shouldBeInstanceOf VoiceGuildChannel::class.java
             }
         }
     }

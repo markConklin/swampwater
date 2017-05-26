@@ -17,6 +17,7 @@ buildscript {
 
 repositories {
   mavenCentral()
+  jcenter()
 }
 
 ext.kotlin_version = '1.1.2-2'
@@ -36,7 +37,7 @@ dependencies {
 
   testCompile 'junit:junit',
     'org.springframework:spring-test',
-    'org.assertj:assertj-core',
+    'org.amshove.kluent:kluent:1.20',
     'org.junit.platform:junit-platform-runner:1.0.0-M4'
   testCompile('org.jetbrains.spek:spek-api:1.1.1') {
     exclude group: 'org.jetbrains.kotlin'
