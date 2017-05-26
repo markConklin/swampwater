@@ -10,11 +10,11 @@ import swampwater.discord.*
 object DispatchDeserializer : StdDeserializer<Dispatch>(Dispatch::class.java) {
     private val opMapping: Map<Op, Map<out String?, Class<out Any>>> = mapOf(
             Op.Dispatch to mapOf(
-                    "GUILD_CREATE" to Guild::class.java,
-                    "MESSAGE_CREATE" to Message::class.java,
+                    "GUILD_CREATE" to GuildCreate::class.java,
+                    "MESSAGE_CREATE" to MessageCreate::class.java,
+                    "PRESENCE_UPDATE" to PresenceUpdate::class.java,
                     "READY" to Ready::class.java,
-                    "TYPING_START" to TypingStart::class.java,
-                    "PRESENCE_UPDATE" to PresenceUpdate::class.java
+                    "TYPING_START" to TypingStart::class.java
             ),
             Op.Hello to mapOf(
                     null to Hello::class.java

@@ -11,7 +11,6 @@ import org.springframework.http.HttpMethod.POST
 import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.integration.config.EnableIntegration
 import org.springframework.integration.dsl.IntegrationFlow
-import org.springframework.integration.dsl.IntegrationFlows
 import org.springframework.integration.dsl.IntegrationFlows.from
 import org.springframework.integration.dsl.channel.MessageChannels
 import org.springframework.integration.dsl.support.Transformers.toJson
@@ -84,10 +83,10 @@ open class Application(
                     { m ->
                         m
                                 .channelMapping(Ready::class.java.name, "discord.${Ready::class.java.simpleName.decapitalize()}.inbound")
-                                .subFlowMapping(Message::class.java.name, { sf ->
+                                .subFlowMapping(MessageCreate::class.java.name, { sf ->
                                     sf
                                             .enrichHeaders { he -> he.headerExpression("discord-channel", "payload.channelId") }
-                                            .channel("discord.${Message::class.java.simpleName.decapitalize()}.inbound")
+                                            .channel("discord.${MessageCreate::class.java.simpleName.decapitalize()}.inbound")
                                 })
                                 .resolutionRequired(false)
                                 .defaultOutputChannel("nullChannel")
@@ -118,7 +117,7 @@ open class Application(
     }
 
     @Bean
-    open fun statusUpdateFlow(): IntegrationFlow = IntegrationFlows.from(httpStatusProducer())
+    open fun statusUpdateFlow(): IntegrationFlow = from(httpStatusProducer())
             .transform { it: SetStatusRequest -> GameStatusUpdate(it.idle, it.game) }
             .enrichHeaders(mutableMapOf(DiscordMessageHeaderAccessor.Op to Op.StatusUpdate as Any))
             .handle(outboundGatewayHandler())
@@ -126,10 +125,8 @@ open class Application(
 
     @Bean
     open fun jokes(): List<Joke> = objectMapper.readValue(javaClass.getResourceAsStream("/jokes.json"), objectMapper.typeFactory.constructCollectionType(List::class.java, Joke::class.java))
+}
 
-    companion object {
-        @JvmStatic fun main(args: Array<String>) {
-            run(Application::class.java, *args)
-        }
-    }
+fun main(vararg args: String) {
+    run(Application::class.java, *args)
 }

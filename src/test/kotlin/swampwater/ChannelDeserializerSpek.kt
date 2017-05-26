@@ -11,7 +11,8 @@ import org.junit.runner.RunWith
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder
 import swampwater.discord.Channel
 import swampwater.discord.DMChannel
-import swampwater.discord.GuildChannel
+import swampwater.discord.TextGuildChannel
+import swampwater.discord.VoiceGuildChannel
 import swampwater.discord.jackson.ObjectMapperCustomizer
 
 @RunWith(JUnitPlatform::class)
@@ -34,7 +35,7 @@ class ChannelDeserializerSpek : Spek({
                 assertThat(channel).isInstanceOf(DMChannel::class.java)
             }
         }
-        on("deserializing a GuildChannel") {
+        on("deserializing a TextGuildChannel") {
             val channel: Channel = objectMapper.readValue("""
             {
                 "id": "19238980",
@@ -46,8 +47,25 @@ class ChannelDeserializerSpek : Spek({
                 "last_message_id": "124545",
                 "is_private": false
             }""", Channel::class.java)
-            it("should be of type GuildChannel") {
-                assertThat(channel).isInstanceOf(GuildChannel::class.java)
+            it("should be of type TextGuildChannel") {
+                assertThat(channel).isInstanceOf(TextGuildChannel::class.java)
+            }
+        }
+        on("deserializing a VoiceGuildChannel") {
+            val channel: Channel = objectMapper.readValue("""
+            {
+                "id": "19238980",
+                "guild_id": "1029098",
+                "name": "buffalo",
+                "type": 2,
+                "position": 2,
+                "permission_overwrites": [],
+                "bit_rate": 124545,
+                "user_limit": 13,
+                "is_private": false
+            }""", Channel::class.java)
+            it("should be of type VoiceGuildChannel") {
+                assertThat(channel).isInstanceOf(VoiceGuildChannel::class.java)
             }
         }
     }

@@ -6,6 +6,11 @@ import swampwater.discord.Dispatch
 
 open class DiscordGatewayMessageProducer : MessageProducerSupport() {
     open fun onEvent(dispatch: Dispatch) {
-        sendMessage(messageBuilderFactory.withPayload(dispatch.d).copyHeaders(DiscordMessageHeaderAccessor(dispatch).toMessageHeaders()).build())
+        sendMessage(
+                messageBuilderFactory
+                        .withPayload(dispatch.d)
+                        .copyHeaders(DiscordMessageHeaderAccessor(dispatch).toMessageHeaders())
+                        .build()
+        )
     }
 }

@@ -1,5 +1,6 @@
 package swampwater.discord.gateway
 
+import org.apache.commons.logging.Log
 import org.apache.commons.logging.LogFactory.getLog
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
@@ -16,7 +17,11 @@ import javax.websocket.*
 import javax.websocket.ContainerProvider.getWebSocketContainer
 
 open class DiscordGatewayContainer(val gatewayUrl: URI, val authorization: String, val scheduler: TaskScheduler) : SmartLifecycle, ApplicationContextAware, Endpoint() {
-    private val logger = getLog(DiscordGatewayContainer::class.java)
+    companion object {
+        val missingHeartbeatACK = CloseReason(CloseReason.CloseCodes.getCloseCode(4000), "Missing Heartbeat ACK")
+        val logger: Log = getLog(DiscordGatewayContainer::class.java)
+    }
+
     private val sendLimiter = Limiter(120L, 1L, MINUTES)
     private var sequence: Int? = null
     private var sessionId: String? = null
@@ -24,6 +29,7 @@ open class DiscordGatewayContainer(val gatewayUrl: URI, val authorization: Strin
     private var heartbeatAck: Boolean = true
     private var restarting: Boolean = false
     private var running: Boolean = false
+
     private lateinit var latch: CountDownLatch
 
     private val config = ClientEndpointConfig.Builder.create()
@@ -64,9 +70,9 @@ open class DiscordGatewayContainer(val gatewayUrl: URI, val authorization: Strin
                     heartbeat = scheduler.scheduleAtFixedRate({
                         if (heartbeatAck) {
                             heartbeatAck = false
-                            sendLimiter.submit { session.basicRemote.sendObject(Dispatch(Op.Heartbeat, sequence)) }
+                            send(Dispatch(Op.Heartbeat, sequence))
                         } else {
-                            session.close()
+                            session.close(missingHeartbeatACK)
                         }
                     }, Date(), (event as Hello).heartbeatInterval)
                     val request = if (sessionId == null) {
@@ -74,7 +80,7 @@ open class DiscordGatewayContainer(val gatewayUrl: URI, val authorization: Strin
                     } else {
                         Dispatch(Op.Resume, Resume(authorization, sessionId!!, sequence))
                     }
-                    sendLimiter.submit { session.basicRemote.sendObject(request) }
+                    send(request)
                 }
                 Op.HeartbeatAck -> heartbeatAck = true
                 else -> logger.warn("Unrecognized Op code $op")
@@ -123,5 +129,4 @@ open class DiscordGatewayContainer(val gatewayUrl: URI, val authorization: Strin
     fun send(dispatch: Dispatch) {
         sendLimiter.submit { session!!.basicRemote.sendObject(dispatch) }
     }
-
 }

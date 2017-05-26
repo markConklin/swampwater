@@ -1,11 +1,11 @@
 package swampwater.discord
 
 data class TextGuildChannel(
-        var id: String,
-        var guildId: String?,
-        var name: String,
-        var position: Int,
-        var permissionOverwrites: List<Any>,
-        var topic: String?,
-        var lastMessageId: String?
+        override val id: String,
+        override val guildId: String?,
+        override val name: String,
+        override val position: Int,
+        override val permissionOverwrites: List<Any>,
+        val topic: String?,
+        val lastMessageId: String?
 ) : GuildChannel

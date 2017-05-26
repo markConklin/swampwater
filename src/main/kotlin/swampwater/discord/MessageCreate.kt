@@ -3,7 +3,7 @@ package swampwater.discord
 import java.net.URL
 import java.time.OffsetDateTime
 
-data class Message(
+data class MessageCreate(
         val id: String,
         val channelId: String,
         val author: User,

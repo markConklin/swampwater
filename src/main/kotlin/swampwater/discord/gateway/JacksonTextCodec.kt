@@ -13,17 +13,11 @@ open class JacksonTextCodec : Encoder.Text<Dispatch>, Decoder.Text<Dispatch> {
         objectMapper = config.userProperties.applicationContext!!.getBean(ObjectMapper::class.java)
     }
 
-    override fun willDecode(s: String?): Boolean {
-        return true
-    }
+    override fun willDecode(s: String?) = true
 
-    override fun decode(s: String?): Dispatch {
-        return objectMapper.readValue(s, Dispatch::class.java)
-    }
+    override fun decode(s: String?): Dispatch = objectMapper.readValue(s, Dispatch::class.java)
 
-    override fun encode(`object`: Dispatch?): String {
-        return objectMapper.writeValueAsString(`object`)
-    }
+    override fun encode(`object`: Dispatch?): String = objectMapper.writeValueAsString(`object`)
 
     override fun destroy() {
     }

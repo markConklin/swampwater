@@ -2,7 +2,7 @@ package swampwater.discord
 
 import java.time.OffsetDateTime
 
-data class Guild(
+data class GuildCreate(
         val id: String,
         val name: String,
         val icon: String?,

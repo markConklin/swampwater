@@ -55,18 +55,19 @@ open class RateLimitingHttpMessageHandler(val restTemplate: RestTemplate, var cl
 
         var result: Any? = null
         while (result == null) {
-            (max(global, limits.getOrPut(destination, { now(clock).toEpochMilli() })) - now(clock).toEpochMilli()).let {
+            val milli = now(clock).toEpochMilli()
+            (max(global, limits.getOrPut(destination, { milli })) - milli).let {
                 if (it > 0) MILLISECONDS.sleep(it)
             }
             try {
                 val response = restTemplate.exchange(request, String::class.java)
-                result = response.headers.apply {
-                    if (rateLimitRemaining == 0) {
-                        limits[destination] = rateLimitReset!!
+                result = response.let {
+                    if (it.headers.rateLimitRemaining == 0) {
+                        limits[destination] = it.headers.rateLimitReset!!
                     }
                     messageBuilderFactory
                             .withPayload(response.body)
-                            .copyHeaders(headerMapper.toHeaders(this))
+                            .copyHeaders(headerMapper.toHeaders(it.headers))
                             .build()
                 }
             } catch(e: HttpClientErrorException) {

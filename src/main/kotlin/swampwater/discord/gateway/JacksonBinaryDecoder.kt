@@ -15,16 +15,9 @@ class JacksonBinaryDecoder : Decoder.Binary<Dispatch> {
         objectMapper = config.userProperties.applicationContext!!.getBean(ObjectMapper::class.java)
     }
 
-    override fun willDecode(bytes: ByteBuffer?): Boolean {
-        return true
-    }
+    override fun willDecode(bytes: ByteBuffer?) = true
 
-    override fun decode(bytes: ByteBuffer?): Dispatch {
-        val stream = InflaterInputStream(ByteBufferBackedInputStream(bytes))
-        stream.use {
-            return objectMapper.readValue(stream, Dispatch::class.java)
-        }
-    }
+    override fun decode(bytes: ByteBuffer?): Dispatch = InflaterInputStream(ByteBufferBackedInputStream(bytes)).use { objectMapper.readValue(it, Dispatch::class.java) }
 
     override fun destroy() {
     }

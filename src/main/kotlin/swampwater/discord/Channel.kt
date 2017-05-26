@@ -1,3 +1,5 @@
 package swampwater.discord
 
-interface Channel
+interface Channel {
+    val id: String
+}

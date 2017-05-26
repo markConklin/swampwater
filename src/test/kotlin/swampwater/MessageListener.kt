@@ -16,7 +16,7 @@ open class MessageListener(val jokes: List<Joke>) {
             field = value
         }
 
-    @Filter(inputChannel = "discord.message.inbound", outputChannel = "event.inbound")
+    @Filter(inputChannel = "discord.messageCreate.inbound", outputChannel = "event.inbound")
     fun filter(@Payload("author") author: User) = author.id != self?.id
 
     @Router(inputChannel = "event.inbound", suffix = ".inbound")
