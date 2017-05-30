@@ -7,15 +7,15 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpHeaders.AUTHORIZATION
+import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.HttpMethod.POST
+import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.integration.config.EnableIntegration
 import org.springframework.integration.dsl.IntegrationFlow
 import org.springframework.integration.dsl.IntegrationFlows.from
 import org.springframework.integration.dsl.channel.MessageChannels
-import org.springframework.integration.dsl.support.Transformers.toJson
-import org.springframework.integration.http.inbound.HttpRequestHandlingMessagingGateway
-import org.springframework.integration.http.inbound.RequestMapping
+import org.springframework.integration.dsl.http.Http
 import org.springframework.integration.scheduling.PollerMetadata
 import org.springframework.integration.scheduling.PollerMetadata.DEFAULT_POLLER
 import org.springframework.messaging.MessageChannel
@@ -27,8 +27,7 @@ import swampwater.discord.gateway.DiscordGatewayContainer
 import swampwater.discord.gateway.DiscordGatewayMessageHandler
 import swampwater.discord.gateway.DiscordGatewayMessageProducer
 import swampwater.discord.gateway.DiscordMessageHeaderAccessor
-import swampwater.discord.resource.RateLimitingHttpMessageHandler
-import java.time.Clock
+import swampwater.discord.resource.RateLimitingInterceptor
 import java.util.concurrent.Executors.newSingleThreadScheduledExecutor
 import java.util.concurrent.TimeUnit.MILLISECONDS
 
@@ -38,17 +37,17 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
 open class Application(
         builder: RestTemplateBuilder,
         val objectMapper: ObjectMapper,
-        @Value("\${discord.baseUrl}") baseUrl: String,
+        @Value("\${discord.baseUrl}") val baseUrl: String,
         @Value("Bot \${discord.authorization}") val authorization: String,
         @Value("\${discord.gateway.version}") version: String
 ) {
 
     private val restTemplate = builder
             .rootUri(baseUrl)
-            .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
+            .additionalInterceptors(ClientHttpRequestInterceptor { request, body, execution ->
                 request.headers[AUTHORIZATION] = authorization
                 execution.execute(request, body)
-            })
+            }, RateLimitingInterceptor())
             .build()
 
     private val gatewayUrl: java.net.URI by lazy {
@@ -58,9 +57,6 @@ open class Application(
                 .build()
                 .toUri()
     }
-
-    @Bean
-    open fun clock(): Clock = Clock.systemUTC()
 
     @Bean
     open fun scheduler() = ConcurrentTaskScheduler(newSingleThreadScheduledExecutor())
@@ -93,9 +89,6 @@ open class Application(
                     })
             .get()
 
-    @Bean
-    open fun outboundMessageHandler() = RateLimitingHttpMessageHandler(restTemplate).apply { url = "/channels/#{headers['discord-channel']}/messages" }
-
     @Bean("discord.message.outbound")
     open fun discordMessageOutbound(): MessageChannel = MessageChannels.queue().get()
 
@@ -103,21 +96,18 @@ open class Application(
     open fun messageOutboundFlow(): IntegrationFlow = from(discordMessageOutbound())
             .split()
             .transform(String::class.java, { CreateMessage(it) })
-            .transform(toJson())
-            .handle(outboundMessageHandler())
+            .enrichHeaders(mutableMapOf(CONTENT_TYPE to APPLICATION_JSON_VALUE as Any))
+            .handle(Http
+                    .outboundChannelAdapter<CreateMessage>({ "$baseUrl/channels/${it.headers["discord-channel"]}/messages" }, restTemplate)
+                    .get())
             .get()
 
     @Bean
-    open fun httpStatusProducer() = HttpRequestHandlingMessagingGateway(false).apply {
-        setRequestPayloadType(SetStatusRequest::class.java)
-        requestMapping = RequestMapping().apply {
-            setMethods(POST)
-            setPathPatterns("/status")
-        }
-    }
-
-    @Bean
-    open fun statusUpdateFlow(): IntegrationFlow = from(httpStatusProducer())
+    open fun statusUpdateFlow(): IntegrationFlow = from(Http
+            .inboundGateway("/status")
+            .requestPayloadType(SetStatusRequest::class.java)
+            .requestMapping { it.methods(POST) }
+            .get())
             .transform { it: SetStatusRequest -> GameStatusUpdate(it.idle, it.game) }
             .enrichHeaders(mutableMapOf(DiscordMessageHeaderAccessor.Op to Op.StatusUpdate as Any))
             .handle(outboundGatewayHandler())

@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.node.NullNode
 import swampwater.discord.*
 
 object DispatchDeserializer : StdDeserializer<Dispatch>(Dispatch::class.java) {
-    private val opMapping: Map<Op, Map<out String?, Class<out Any>>> = mapOf(
+    private val mapping: Map<Op, Map<out String?, Class<out Any>>> = mapOf(
             Op.Dispatch to mapOf(
                     "GUILD_CREATE" to GuildCreate::class.java,
                     "MESSAGE_CREATE" to MessageCreate::class.java,
@@ -29,13 +29,16 @@ object DispatchDeserializer : StdDeserializer<Dispatch>(Dispatch::class.java) {
 
     override fun deserialize(parser: JsonParser, context: DeserializationContext): Dispatch {
         val root: JsonNode = parser.readValueAsTree()
-        val op = Op::class.java.enumConstants[root["op"].asInt()]
+        val op = root["op"].traverse(parser.codec).readValueAs(Op::class.java)
         val t = root["t"].asText(null)
-        val d = root["d"]
-        val event = if (d is NullNode) null else {
-            val type = opMapping[op]?.get(t)
-            type ?: context.reportMappingException("unrecognized op/type %s/%s", op, t)
-            d.traverse(parser.codec).readValueAs(type)
+        val event = root["d"].let {
+            if (it is NullNode) {
+                null
+            } else {
+                val type = mapping[op]?.get(t)
+                type ?: context.reportMappingException("unrecognized op/type %s/%s", op, t)
+                it.traverse(parser.codec).readValueAs(type)
+            }
         }
         return Dispatch(op, event, root["s"].asInt(), t)
     }
