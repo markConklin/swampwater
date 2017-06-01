@@ -78,10 +78,10 @@ open class Application(
                     { m ->
                         m
                                 .channelMapping(Ready::class.java.name, "discord.${Ready::class.java.simpleName.decapitalize()}.inbound")
-                                .subFlowMapping(MessageCreate::class.java.name, { sf ->
+                                .subFlowMapping(Message::class.java.name, { sf ->
                                     sf
                                             .enrichHeaders { he -> he.headerExpression("discord-channel", "payload.channelId") }
-                                            .channel("discord.${MessageCreate::class.java.simpleName.decapitalize()}.inbound")
+                                            .channel("discord.${Message::class.java.simpleName.decapitalize()}.inbound")
                                 })
                                 .resolutionRequired(false)
                                 .defaultOutputChannel("nullChannel")
