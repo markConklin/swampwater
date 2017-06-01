@@ -10,8 +10,8 @@ import java.lang.Long.max
 import java.time.Clock
 import java.time.Instant.now
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit.MILLISECONDS
+import java.util.concurrent.TimeUnit.SECONDS
 
 class RateLimitingInterceptor(private var clock: Clock = Clock.systemUTC()) : ClientHttpRequestInterceptor {
     private var global = now(clock).toEpochMilli()
@@ -25,9 +25,6 @@ class RateLimitingInterceptor(private var clock: Clock = Clock.systemUTC()) : Cl
                 if (it > 0) MILLISECONDS.sleep(it)
             }
             val response = execution.execute(request, body)
-            if (response.headers.rateLimitRemaining == 0) {
-                limits[destination] = response.headers.rateLimitReset!!
-            }
             if (response.statusCode == TOO_MANY_REQUESTS) {
                 with(response.headers) {
                     val retry: Long = rateLimitReset!!
@@ -38,6 +35,9 @@ class RateLimitingInterceptor(private var clock: Clock = Clock.systemUTC()) : Cl
                     }
                 }
             } else {
+                if (response.headers.rateLimitRemaining == 0) {
+                    limits[destination] = response.headers.rateLimitReset!!
+                }
                 return response
             }
         }
@@ -45,7 +45,7 @@ class RateLimitingInterceptor(private var clock: Clock = Clock.systemUTC()) : Cl
 }
 
 val HttpHeaders.rateLimitReset: Long?
-    get() = TimeUnit.SECONDS.toMillis(this.getFirst("X-RateLimit-Reset")?.toLong() ?: 0)
+    get() = SECONDS.toMillis(this.getFirst("X-RateLimit-Reset")?.toLong() ?: 0)
 
 val HttpHeaders.rateLimitRemaining: Int?
     get() = this.getFirst("X-RateLimit-Remaining")?.toInt()

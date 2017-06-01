@@ -14,7 +14,7 @@ import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.integration.config.EnableIntegration
 import org.springframework.integration.dsl.IntegrationFlow
 import org.springframework.integration.dsl.IntegrationFlows.from
-import org.springframework.integration.dsl.channel.MessageChannels
+import org.springframework.integration.dsl.channel.MessageChannels.queue
 import org.springframework.integration.dsl.http.Http
 import org.springframework.integration.scheduling.PollerMetadata
 import org.springframework.integration.scheduling.PollerMetadata.DEFAULT_POLLER
@@ -43,7 +43,6 @@ open class Application(
 ) {
 
     private val restTemplate = builder
-            .rootUri(baseUrl)
             .additionalInterceptors(ClientHttpRequestInterceptor { request, body, execution ->
                 request.headers[AUTHORIZATION] = authorization
                 execution.execute(request, body)
@@ -51,7 +50,7 @@ open class Application(
             .build()
 
     private val gatewayUrl: java.net.URI by lazy {
-        fromUriString(restTemplate.getForObject("/gateway/bot", Gateway::class.java).url)
+        fromUriString(restTemplate.getForObject("$baseUrl/gateway/bot", Gateway::class.java).url)
                 .queryParam("encoding", "json")
                 .queryParam("v", version)
                 .build()
@@ -90,7 +89,7 @@ open class Application(
             .get()
 
     @Bean("discord.message.outbound")
-    open fun discordMessageOutbound(): MessageChannel = MessageChannels.queue().get()
+    open fun discordMessageOutbound(): MessageChannel = queue().get()
 
     @Bean
     open fun messageOutboundFlow(): IntegrationFlow = from(discordMessageOutbound())
