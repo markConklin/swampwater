@@ -22,7 +22,10 @@ import org.springframework.messaging.MessageChannel
 import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler
 import org.springframework.scheduling.support.PeriodicTrigger
 import org.springframework.web.util.UriComponentsBuilder.fromUriString
-import swampwater.discord.*
+import swampwater.discord.CreateMessage
+import swampwater.discord.GameStatusUpdate
+import swampwater.discord.Gateway
+import swampwater.discord.Op
 import swampwater.discord.gateway.DiscordGatewayContainer
 import swampwater.discord.gateway.DiscordGatewayMessageHandler
 import swampwater.discord.gateway.DiscordGatewayMessageProducer
@@ -74,18 +77,22 @@ open class Application(
 
     @Bean
     open fun gatewayInboundFlow(): IntegrationFlow = from(inboundGatewayProducer())
-            .route<Any, String>({ p -> p.javaClass.name },
-                    { m ->
-                        m
-                                .channelMapping(Ready::class.java.name, "discord.${Ready::class.java.simpleName.decapitalize()}.inbound")
-                                .subFlowMapping(Message::class.java.name, { sf ->
+            .route<Map<String, Any>, String>(
+                    {
+                        (it[DiscordMessageHeaderAccessor.EventType] ?: it[DiscordMessageHeaderAccessor.Op])?.toString()?.toCamelCase()
+                    },
+                    {
+                        it
+                                .channelMapping("ready", "discord.ready.inbound")
+                                .subFlowMapping("messageCreate", { sf ->
                                     sf
                                             .enrichHeaders { he -> he.headerExpression("discord-channel", "payload.channelId") }
-                                            .channel("discord.${Message::class.java.simpleName.decapitalize()}.inbound")
+                                            .channel("discord.messageCreate.inbound")
                                 })
                                 .resolutionRequired(false)
                                 .defaultOutputChannel("nullChannel")
-                    })
+                    }
+            )
             .get()
 
     @Bean("discord.message.outbound")
@@ -115,6 +122,14 @@ open class Application(
     @Bean
     open fun jokes(): List<Joke> = objectMapper.readValue(javaClass.getResourceAsStream("/jokes.json"), objectMapper.typeFactory.constructCollectionType(List::class.java, Joke::class.java))
 }
+
+fun String.beginWithUpperCase(): String = when (this.length) {
+    0 -> ""
+    1 -> this.toUpperCase()
+    else -> this[0].toUpperCase() + this.substring(1)
+}
+
+fun String.toCamelCase() = this.toLowerCase().split('_').map { it.beginWithUpperCase() }.joinToString("").decapitalize()
 
 fun main(vararg args: String) {
     run(Application::class.java, *args)
