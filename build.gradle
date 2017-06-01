@@ -68,3 +68,7 @@ jar {
     )
   }
 }
+
+bootRepackage {
+  enabled = false
+}
