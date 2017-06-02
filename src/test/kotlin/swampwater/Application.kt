@@ -76,24 +76,37 @@ open class Application(
     open fun inboundGatewayProducer() = DiscordGatewayMessageProducer().apply { gatewayContainer().eventHandler = this }
 
     @Bean
-    open fun gatewayInboundFlow(): IntegrationFlow = from(inboundGatewayProducer())
-            .route<Map<String, Any>, String>(
-                    {
-                        (it[DiscordMessageHeaderAccessor.EventType] ?: it[DiscordMessageHeaderAccessor.Op])?.toString()?.toCamelCase()
-                    },
-                    {
-                        it
-                                .channelMapping("ready", "discord.ready.inbound")
-                                .subFlowMapping("messageCreate", { sf ->
-                                    sf
-                                            .enrichHeaders { he -> he.headerExpression("discord-channel", "payload.channelId") }
-                                            .channel("discord.messageCreate.inbound")
-                                })
-                                .resolutionRequired(false)
-                                .defaultOutputChannel("nullChannel")
-                    }
-            )
-            .get()
+    open fun gatewayInboundFlow(): IntegrationFlow {
+        return from(inboundGatewayProducer())
+                .enrichHeaders { s ->
+                    s.headerFunction<Any>("routeHint", { m ->
+                        (m.headers[DiscordMessageHeaderAccessor.EventType] ?: m.headers[DiscordMessageHeaderAccessor.Op])?.toString()?.toLowerCase()?.toCamelCase()
+                    })
+                }
+                .route<Map<String, Any>, String>(
+                        { h -> h["routeHint"].toString() },
+                        { rs ->
+                            rs
+                                    .subFlowMapping("messageCreate", { sf ->
+                                        sf
+                                                .enrichHeaders { h -> h.headerExpression("discord-channel", "payload.channelId") }
+                                                .channel("discord.messageCreate.inbound")
+                                    })
+                                    .resolutionRequired(false)
+                                    .defaultSubFlowMapping { sf ->
+                                        sf
+                                                .route<Map<String, Any>, String>({ "discord.${it["routeHint"]}.inbound" },
+                                                        {
+                                                            it
+                                                                    .resolutionRequired(false)
+                                                                    .defaultOutputChannel("nullChannel")
+
+                                                        })
+                                    }
+                        }
+                )
+                .get()
+    }
 
     @Bean("discord.message.outbound")
     open fun discordMessageOutbound(): MessageChannel = queue().get()
@@ -122,14 +135,6 @@ open class Application(
     @Bean
     open fun jokes(): List<Joke> = objectMapper.readValue(javaClass.getResourceAsStream("/jokes.json"), objectMapper.typeFactory.constructCollectionType(List::class.java, Joke::class.java))
 }
-
-fun String.beginWithUpperCase(): String = when (this.length) {
-    0 -> ""
-    1 -> this.toUpperCase()
-    else -> this[0].toUpperCase() + this.substring(1)
-}
-
-fun String.toCamelCase() = this.toLowerCase().split('_').map { it.beginWithUpperCase() }.joinToString("").decapitalize()
 
 fun main(vararg args: String) {
     run(Application::class.java, *args)
