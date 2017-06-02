@@ -78,33 +78,22 @@ open class Application(
     @Bean
     open fun gatewayInboundFlow(): IntegrationFlow {
         return from(inboundGatewayProducer())
-                .enrichHeaders { s ->
-                    s.headerFunction<Any>("routeHint", { m ->
-                        (m.headers[DiscordMessageHeaderAccessor.EventType] ?: m.headers[DiscordMessageHeaderAccessor.Op])?.toString()?.toLowerCase()?.toCamelCase()
-                    })
-                }
                 .route<Map<String, Any>, String>(
-                        { h -> h["routeHint"].toString() },
-                        { rs ->
-                            rs
-                                    .subFlowMapping("messageCreate", { sf ->
+                        {
+                            val routeHint = (it[DiscordMessageHeaderAccessor.EventType] ?: it[DiscordMessageHeaderAccessor.Op])?.toString()?.toLowerCase()?.toCamelCase()
+                            "discord.$routeHint.inbound"
+                        },
+                        {
+                            it
+                                    .subFlowMapping("discord.messageCreate.inbound", { sf ->
                                         sf
                                                 .enrichHeaders { h -> h.headerExpression("discord-channel", "payload.channelId") }
                                                 .channel("discord.messageCreate.inbound")
                                     })
                                     .resolutionRequired(false)
-                                    .defaultSubFlowMapping { sf ->
-                                        sf
-                                                .route<Map<String, Any>, String>({ "discord.${it["routeHint"]}.inbound" },
-                                                        {
-                                                            it
-                                                                    .resolutionRequired(false)
-                                                                    .defaultOutputChannel("nullChannel")
+                                    .defaultOutputChannel("nullChannel")
 
-                                                        })
-                                    }
-                        }
-                )
+                        })
                 .get()
     }
 
