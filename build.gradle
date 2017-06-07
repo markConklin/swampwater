@@ -28,12 +28,14 @@ dependencies {
   compile 'org.apache.httpcomponents:httpclient',
     'com.fasterxml.jackson.datatype:jackson-datatype-jsr310',
     'com.fasterxml.jackson.module:jackson-module-kotlin',
+    'com.google.guava:guava:22.0',
     "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version",
     'org.springframework.boot:spring-boot-starter-actuator',
     'org.springframework.boot:spring-boot-starter-integration',
     'org.springframework.boot:spring-boot-starter-web',
     'org.springframework.boot:spring-boot-starter-websocket',
     'org.springframework.integration:spring-integration-http'
+
 
   testCompile 'junit:junit',
     'org.springframework:spring-test',

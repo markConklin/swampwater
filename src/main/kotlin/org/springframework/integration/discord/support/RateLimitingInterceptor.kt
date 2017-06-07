@@ -1,4 +1,4 @@
-package swampwater.discord.resource
+package org.springframework.integration.discord.support
 
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpRequest

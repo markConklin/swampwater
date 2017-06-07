@@ -1,7 +1,8 @@
-package swampwater.discord.gateway
+package org.springframework.integration.discord.inbound
 
 import org.springframework.integration.endpoint.MessageProducerSupport
 import swampwater.discord.Dispatch
+import org.springframework.integration.discord.support.DiscordMessageHeaderAccessor
 
 
 open class DiscordGatewayMessageProducer : MessageProducerSupport() {

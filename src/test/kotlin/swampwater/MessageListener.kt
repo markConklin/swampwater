@@ -27,5 +27,3 @@ open class MessageListener(val jokes: List<Joke>) {
     @ServiceActivator(inputChannel = "ack.inbound", outputChannel = "discord.message.outbound")
     fun ack(@Payload("content") content: String) = "\"$content\" received\n"
 }
-
-fun <E> List<E>.random(): E = this[ThreadLocalRandom.current().nextInt(this.size)]

@@ -1,17 +1,25 @@
 package swampwater
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.SpringApplication.run
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.DependsOn
+import org.springframework.context.support.ConversionServiceFactoryBean
+import org.springframework.core.convert.converter.Converter
 import org.springframework.http.HttpHeaders.AUTHORIZATION
 import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.HttpMethod.POST
 import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.integration.config.EnableIntegration
+import org.springframework.integration.discord.common.DiscordGatewayContainer
+import org.springframework.integration.discord.inbound.DiscordGatewayMessageProducer
+import org.springframework.integration.discord.outbound.DiscordGatewayMessageHandler
+import org.springframework.integration.discord.support.DiscordMessageHeaderAccessor
 import org.springframework.integration.dsl.IntegrationFlow
 import org.springframework.integration.dsl.IntegrationFlows.from
 import org.springframework.integration.dsl.channel.MessageChannels.queue
@@ -22,20 +30,17 @@ import org.springframework.messaging.MessageChannel
 import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler
 import org.springframework.scheduling.support.PeriodicTrigger
 import org.springframework.web.util.UriComponentsBuilder.fromUriString
-import swampwater.discord.CreateMessage
-import swampwater.discord.GameStatusUpdate
-import swampwater.discord.Gateway
-import swampwater.discord.Op
-import swampwater.discord.gateway.DiscordGatewayContainer
-import swampwater.discord.gateway.DiscordGatewayMessageHandler
-import swampwater.discord.gateway.DiscordGatewayMessageProducer
-import swampwater.discord.gateway.DiscordMessageHeaderAccessor
-import swampwater.discord.resource.RateLimitingInterceptor
+import swampwater.discord.*
+import org.springframework.integration.discord.support.RateLimitingInterceptor
+import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
 import java.util.concurrent.Executors.newSingleThreadScheduledExecutor
 import java.util.concurrent.TimeUnit.MILLISECONDS
+import java.util.zip.DeflaterOutputStream
+import java.util.zip.InflaterInputStream
 
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = arrayOf("org.springframework.integration.discord", "swampwater"))
 @EnableIntegration
 open class Application(
         builder: RestTemplateBuilder,
@@ -61,12 +66,34 @@ open class Application(
     }
 
     @Bean
+    open fun webSocketConversionService() = ConversionServiceFactoryBean()
+            .apply {
+                setConverters(mutableSetOf<Any>(
+                        Converter<String, Dispatch> {
+                            objectMapper.readValue(it, Dispatch::class.java)
+                        },
+                        Converter<Dispatch, String> {
+                            objectMapper.writeValueAsString(it)
+                        },
+                        Converter<ByteBuffer, Dispatch> {
+                            InflaterInputStream(ByteBufferBackedInputStream(it)).use { s -> objectMapper.readValue(s, Dispatch::class.java) }
+                        },
+                        Converter<Dispatch, ByteBuffer> {
+                            val result = ByteArrayOutputStream()
+                            DeflaterOutputStream(result).use { s -> objectMapper.writeValue(s, it) }
+                            ByteBuffer.wrap(result.toByteArray())
+                        }
+                ))
+            }
+
+    @Bean
     open fun scheduler() = ConcurrentTaskScheduler(newSingleThreadScheduledExecutor())
 
     @Bean(DEFAULT_POLLER)
     open fun defaultPoller() = PollerMetadata().apply { trigger = PeriodicTrigger(10, MILLISECONDS) }
 
     @Bean
+    @DependsOn("applicationContextProvider")
     open fun gatewayContainer() = DiscordGatewayContainer(gatewayUrl, authorization, scheduler())
 
     @Bean

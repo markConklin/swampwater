@@ -1,4 +1,4 @@
-package swampwater.discord.gateway
+package org.springframework.integration.discord.support
 
 import org.springframework.messaging.Message
 import org.springframework.messaging.support.MessageHeaderAccessor
