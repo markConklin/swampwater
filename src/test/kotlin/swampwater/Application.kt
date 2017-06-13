@@ -37,6 +37,7 @@ import swampwater.discord.converter.ByteBufferToDispatchConverter
 import swampwater.discord.converter.DispatchToByteBufferConverter
 import swampwater.discord.converter.DispatchToStringConverter
 import swampwater.discord.converter.StringToDispatchConverter
+import java.net.URI
 import java.util.concurrent.Executors.newSingleThreadScheduledExecutor
 import java.util.concurrent.TimeUnit.MILLISECONDS
 
@@ -58,7 +59,7 @@ open class Application(
             }, RateLimitingInterceptor())
             .build()
 
-    private val gatewayUrl: java.net.URI by lazy {
+    private val gatewayUrl: URI by lazy {
         fromUriString(restTemplate.getForObject("$baseUrl/gateway/bot", Gateway::class.java).url)
                 .queryParam("encoding", "json")
                 .queryParam("v", version)

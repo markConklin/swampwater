@@ -5,7 +5,11 @@ import javax.websocket.RemoteEndpoint
 import javax.websocket.Session
 
 class RateLimitingSession(session: Session) : Session by session {
-    private val basicRemote = RateLimitingBasicRemote(RateLimiter.create(2.0), session.basicRemote)
+    companion object{
+        val rateLimiter: RateLimiter = RateLimiter.create(2.0)
+    }
+
+    private val basicRemote = RateLimitingBasicRemote(rateLimiter, session.basicRemote)
 
     override fun getBasicRemote(): RemoteEndpoint.Basic = basicRemote
 
@@ -16,5 +20,4 @@ class RateLimitingSession(session: Session) : Session by session {
             remote.sendObject(data)
         }
     }
-
 }

@@ -9,6 +9,8 @@ import org.springframework.scheduling.TaskScheduler
 import org.springframework.web.socket.adapter.standard.ConvertingEncoderDecoderSupport
 import swampwater.discord.*
 import java.net.URI
+import java.time.Clock
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ScheduledFuture
@@ -16,16 +18,13 @@ import java.util.concurrent.TimeUnit.SECONDS
 import javax.websocket.*
 import javax.websocket.ContainerProvider.getWebSocketContainer
 
-open class DiscordGatewayContainer(val gatewayUrl: URI, val authorization: String, val scheduler: TaskScheduler) : SmartLifecycle, Endpoint() {
+open class DiscordGatewayContainer(val gatewayUrl: URI, val authorization: String, val scheduler: TaskScheduler, val clock: Clock = Clock.systemUTC()) : SmartLifecycle, Endpoint() {
     companion object {
         val missingHeartbeatACK = CloseReason(CloseReason.CloseCodes.getCloseCode(4000), "Missing Heartbeat ACK")
         val logger: Log = getLog(DiscordGatewayContainer::class.java)
     }
 
-    private var sequence: Int? = null
-    private var sessionId: String? = null
     private var heartbeat: ScheduledFuture<*>? = null
-    private var heartbeatAck: Boolean = true
     private var restarting: Boolean = false
     private var running: Boolean = false
 
@@ -46,46 +45,52 @@ open class DiscordGatewayContainer(val gatewayUrl: URI, val authorization: Strin
 
     override fun onOpen(session: Session, config: EndpointConfig) {
         this.session = RateLimitingSession(session).apply {
-            latch.countDown()
-            addMessageHandler(MessageHandler.Whole<Dispatch> { dispatch ->
-                sequence = dispatch.s
-                val (op, event) = dispatch
-                when (op) {
-                    Op.Dispatch -> {
-                        when (event) {
-                            is Ready -> sessionId = event.sessionId
-                        }
-                        eventHandler?.onEvent(dispatch)
-                    }
-                    Op.Reconnect -> close()
-                    Op.InvalidSession -> {
-                        if (!(event as Boolean)) {
-                            sequence = null
-                            sessionId = null
-                        }
-                        close()
-                    }
-                    Op.Hello -> {
-                        heartbeat = scheduler.scheduleAtFixedRate({
-                            if (heartbeatAck) {
-                                heartbeatAck = false
-                                basicRemote.sendObject(Dispatch(Op.Heartbeat, sequence))
-                            } else {
-                                close(missingHeartbeatACK)
+            addMessageHandler(object : MessageHandler.Whole<Dispatch> {
+                private var sequence: Int? = null
+                private var sessionId: String? = null
+                private var heartbeatAck: Boolean = true
+
+                override fun onMessage(dispatch: Dispatch) {
+                    sequence = dispatch.s
+                    val (op, event) = dispatch
+                    when (op) {
+                        Op.Dispatch -> {
+                            when (event) {
+                                is Ready -> sessionId = event.sessionId
                             }
-                        }, Date(), (event as Hello).heartbeatInterval)
-                        val request = if (sessionId == null) {
-                            Dispatch(Op.Identity, Identity(authorization))
-                        } else {
-                            Dispatch(Op.Resume, Resume(authorization, sessionId!!, sequence))
+                            eventHandler?.onEvent(dispatch)
                         }
-                        basicRemote.sendObject(request)
+                        Op.Reconnect -> close()
+                        Op.InvalidSession -> {
+                            if (!(event as Boolean)) {
+                                sequence = null
+                                sessionId = null
+                            }
+                            close()
+                        }
+                        Op.Hello -> {
+                            heartbeat = scheduler.scheduleAtFixedRate({
+                                if (heartbeatAck) {
+                                    heartbeatAck = false
+                                    basicRemote.sendObject(Dispatch(Op.Heartbeat, sequence))
+                                } else {
+                                    close(missingHeartbeatACK)
+                                }
+                            }, Date.from(Instant.now(clock)), (event as Hello).heartbeatInterval)
+                            val request = if (sessionId == null) {
+                                Dispatch(Op.Identity, Identity(authorization))
+                            } else {
+                                Dispatch(Op.Resume, Resume(authorization, sessionId!!, sequence))
+                            }
+                            basicRemote.sendObject(request)
+                        }
+                        Op.HeartbeatAck -> heartbeatAck = true
+                        else -> logger.warn("Unrecognized Op code $op")
                     }
-                    Op.HeartbeatAck -> heartbeatAck = true
-                    else -> logger.warn("Unrecognized Op code $op")
                 }
             })
         }
+        latch.countDown()
     }
 
     override fun onError(session: Session?, throwable: Throwable?) {

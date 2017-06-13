@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
 
-class RateLimitingInterceptor(private var clock: Clock = Clock.systemUTC()) : ClientHttpRequestInterceptor {
+class RateLimitingInterceptor(var clock: Clock = Clock.systemUTC()) : ClientHttpRequestInterceptor {
     private var global = now(clock).toEpochMilli()
     private val limits = ConcurrentHashMap<String, Long>()
 
