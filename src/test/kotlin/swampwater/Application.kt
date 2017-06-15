@@ -29,7 +29,6 @@ import org.springframework.messaging.MessageChannel
 import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler
 import org.springframework.scheduling.support.PeriodicTrigger
 import org.springframework.web.util.UriComponentsBuilder.fromUriString
-import swampwater.discord.CreateMessage
 import swampwater.discord.GameStatusUpdate
 import swampwater.discord.Gateway
 import swampwater.discord.Op
@@ -99,8 +98,8 @@ open class Application(
         return from(inboundGatewayProducer())
                 .route<Map<String, Any>, String>(
                         {
-                            val routeHint = (it[DiscordMessageHeaderAccessor.EventType] ?: it[DiscordMessageHeaderAccessor.Op])?.toString()?.toLowerCase()?.toCamelCase()
-                            "discord.$routeHint.inbound"
+                            val type = (it[DiscordMessageHeaderAccessor.EventType] ?: it[DiscordMessageHeaderAccessor.Op])?.toString()?.toLowerCase()?.toCamelCase()
+                            "discord.$type.inbound"
                         },
                         {
                             it
@@ -122,7 +121,7 @@ open class Application(
     @Bean
     open fun messageOutboundFlow(): IntegrationFlow = from(discordMessageOutbound())
             .split()
-            .transform(String::class.java, { CreateMessage(it) })
+            .transform { it: String -> CreateMessage(it) }
             .enrichHeaders(mutableMapOf(CONTENT_TYPE to APPLICATION_JSON_VALUE as Any))
             .handle(Http
                     .outboundChannelAdapter<CreateMessage>({ "$baseUrl/channels/${it.headers["discord-channel"]}/messages" }, restTemplate)

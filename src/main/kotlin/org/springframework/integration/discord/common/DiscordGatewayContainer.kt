@@ -10,7 +10,7 @@ import org.springframework.web.socket.adapter.standard.ConvertingEncoderDecoderS
 import swampwater.discord.*
 import java.net.URI
 import java.time.Clock
-import java.time.Instant
+import java.time.Instant.now
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ScheduledFuture
@@ -76,7 +76,7 @@ open class DiscordGatewayContainer(val gatewayUrl: URI, val authorization: Strin
                                 } else {
                                     close(missingHeartbeatACK)
                                 }
-                            }, Date.from(Instant.now(clock)), (event as Hello).heartbeatInterval)
+                            }, Date.from(now(clock)), (event as Hello).heartbeatInterval)
                             val request = if (sessionId == null) {
                                 Dispatch(Op.Identity, Identity(authorization))
                             } else {
@@ -95,14 +95,14 @@ open class DiscordGatewayContainer(val gatewayUrl: URI, val authorization: Strin
 
     override fun onError(session: Session?, throwable: Throwable?) {
         logger.error("error", throwable)
-        if (restarting) scheduler.schedule(this::start, Date())
+        if (restarting) scheduler.schedule(this::start, Date.from(now(clock)))
     }
 
     override fun onClose(session: Session?, closeReason: CloseReason?) {
         logger.info("closing $closeReason")
         heartbeat?.cancel(true)
         restarting = true
-        scheduler.schedule(this::start, Date())
+        scheduler.schedule(this::start, Date.from(now(clock)))
     }
 
     override fun start() {

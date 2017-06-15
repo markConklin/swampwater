@@ -1,4 +1,6 @@
-package swampwater.discord
+package swampwater
+
+import swampwater.discord.Embed
 
 
 data class CreateMessage(

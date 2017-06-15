@@ -12,7 +12,7 @@ import swampwater.discord.GuildChannel
 object ChannelDeserializer : StdDeserializer<Channel>(Channel::class.java) {
     override fun deserialize(parser: JsonParser, context: DeserializationContext): Channel = parser.readValueAsTree<JsonNode>().let {
         it.traverse(parser.codec).readValueAs(
-                if (it["is_private"].asBoolean())
+                if (it["recipients"] != null)
                     DMChannel::class.java
                 else
                     GuildChannel::class.java

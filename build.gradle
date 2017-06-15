@@ -34,12 +34,11 @@ dependencies {
     'org.springframework.boot:spring-boot-starter-integration',
     'org.springframework.boot:spring-boot-starter-web',
     'org.springframework.boot:spring-boot-starter-websocket',
-    'org.springframework.integration:spring-integration-http'
+    'org.springframework.integration:spring-integration-http',
+    'org.springframework.integration:spring-integration-websocket'
 
 
-  testCompile 'junit:junit',
-    'org.springframework:spring-test',
-    'org.amshove.kluent:kluent:1.20',
+  testCompile 'org.amshove.kluent:kluent:1.20',
     'org.junit.platform:junit-platform-runner:1.0.0-M4'
   testCompile('org.jetbrains.spek:spek-api:1.1.1') {
     exclude group: 'org.jetbrains.kotlin'
