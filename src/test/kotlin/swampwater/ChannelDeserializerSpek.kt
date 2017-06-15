@@ -25,9 +25,9 @@ class ChannelDeserializerSpek : Spek({
             val channel: Channel = objectMapper.readValue("""
             {
                 "id": "19238980",
-                "recipient":{
+                "recipients":[{
                     "id": "9859034"
-                    },
+                    }],
                 "last_message_id": "124545",
                 "is_private": true
             }""", Channel::class.java)
