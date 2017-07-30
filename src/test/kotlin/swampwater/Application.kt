@@ -48,7 +48,7 @@ open class Application(
         val objectMapper: ObjectMapper,
         @Value("\${discord.baseUrl}") val baseUrl: String,
         @Value("Bot \${discord.authorization}") val authorization: String,
-        @Value("\${discord.gateway.version}") version: String
+        @Value("\${discord.version}") version: String
 ) {
 
     private val restTemplate = builder
