@@ -5,7 +5,6 @@ import org.springframework.integration.annotation.Router
 import org.springframework.integration.annotation.ServiceActivator
 import org.springframework.messaging.handler.annotation.Payload
 import org.springframework.stereotype.Component
-import java.util.concurrent.ThreadLocalRandom
 
 @Component
 open class MessageListener(val jokes: List<Joke>) {
