@@ -5,7 +5,7 @@ import javax.websocket.RemoteEndpoint
 import javax.websocket.Session
 
 class RateLimitingSession(session: Session) : Session by session {
-    companion object{
+    companion object {
         val rateLimiter: RateLimiter = RateLimiter.create(2.0)
     }
 

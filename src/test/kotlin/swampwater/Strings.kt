@@ -1,6 +1,6 @@
 package swampwater
 
-fun String.beginWithUpperCase(): String = when (length) {
+fun String.beginWithUpperCase() = when (length) {
     0 -> ""
     1 -> toUpperCase()
     else -> this[0].toUpperCase() + this.substring(1)

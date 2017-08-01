@@ -6,8 +6,6 @@ import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.given
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
-import org.junit.platform.runner.JUnitPlatform
-import org.junit.runner.RunWith
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder
 import swampwater.discord.Channel
 import swampwater.discord.DMChannel
@@ -15,8 +13,7 @@ import swampwater.discord.TextGuildChannel
 import swampwater.discord.VoiceGuildChannel
 import swampwater.discord.jackson.ObjectMapperCustomizer
 
-@RunWith(JUnitPlatform::class)
-class ChannelDeserializerSpek : Spek({
+object ChannelDeserializerSpek : Spek({
     given("Object Mapper with custom deserializer configuration") {
         val objectMapper: ObjectMapper = Jackson2ObjectMapperBuilder().apply {
             ObjectMapperCustomizer().customize(this)
