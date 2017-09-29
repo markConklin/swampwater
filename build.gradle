@@ -1,20 +1,8 @@
-buildscript {
-  ext.kotlin_version = '1.1.3-2'
-  repositories {
-    mavenCentral()
-  }
-  dependencies {
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version",
-      'org.junit.platform:junit-platform-gradle-plugin:1.0.0-M4',
-      'org.springframework.boot:spring-boot-gradle-plugin:1.5.4.RELEASE'
-  }
+plugins {
+  id 'org.jetbrains.kotlin.jvm' version '1.1.50'
+  id 'org.junit.platform.gradle.plugin' version '1.0.0'
+  id 'org.springframework.boot' version '1.5.7.RELEASE'
 }
-
-[
-  'org.junit.platform.gradle.plugin',
-  'kotlin',
-  'org.springframework.boot'
-].forEach { apply plugin: it }
 
 repositories {
   mavenCentral()
@@ -36,15 +24,10 @@ dependencies {
     'org.springframework.integration:spring-integration-http',
     'org.springframework.integration:spring-integration-websocket'
 
-  testCompile 'org.amshove.kluent:kluent:1.26',
-    'org.junit.platform:junit-platform-runner:1.0.0-M4'
-  testCompile('org.jetbrains.spek:spek-api:1.1.2') {
-    exclude group: 'org.jetbrains.kotlin'
-  }
-  testCompile('org.jetbrains.spek:spek-junit-platform-engine:1.1.2') {
-    exclude group: 'org.junit.platform'
-    exclude group: 'org.jetbrains.kotlin'
-  }
+  testCompile 'org.amshove.kluent:kluent:1.29',
+    "org.jetbrains.spek:spek-api:$spek_version"
+
+  testRuntime "org.jetbrains.spek:spek-junit-platform-engine:$spek_version"
 }
 
 processResources {
