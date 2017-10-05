@@ -45,9 +45,9 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
 @EnableIntegration
 open class Application(
         builder: RestTemplateBuilder,
-        val objectMapper: ObjectMapper,
-        @Value("\${discord.baseUrl}") val baseUrl: String,
-        @Value("Bot \${discord.authorization}") val authorization: String,
+        private val objectMapper: ObjectMapper,
+        @Value("\${discord.baseUrl}") private val baseUrl: String,
+        @Value("Bot \${discord.authorization}") private val authorization: String,
         @Value("\${discord.version}") version: String
 ) {
 
