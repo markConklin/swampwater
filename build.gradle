@@ -1,13 +1,15 @@
 plugins {
+  id 'com.zoltu.git-versioning' version '3.0.3'
   id 'org.jetbrains.kotlin.jvm' version '1.1.51'
   id 'org.junit.platform.gradle.plugin' version '1.0.1'
   id 'org.springframework.boot' version '1.5.7.RELEASE'
-  id 'com.zoltu.git-versioning' version '3.0.3'
 }
 
 repositories {
+  mavenLocal()
   mavenCentral()
   jcenter()
+  maven { url "http://dl.bintray.com/jetbrains/spek" }
 }
 
 dependencies {
@@ -26,7 +28,7 @@ dependencies {
   testCompile 'org.amshove.kluent:kluent:1.29',
     "org.jetbrains.spek:spek-api:$spek_version"
 
-  testRuntime 'org.junit.platform:junit-platform-runner:1.0.0',
+  testRuntime 'org.junit.platform:junit-platform-runner:1.0.1',
     "org.jetbrains.spek:spek-junit-platform-engine:$spek_version"
 }
 

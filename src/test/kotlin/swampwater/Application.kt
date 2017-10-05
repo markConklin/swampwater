@@ -98,7 +98,7 @@ open class Application(
         return from(inboundGatewayProducer())
                 .route<Map<String, Any>, String>(
                         {
-                            val type = (it[DiscordMessageHeaderAccessor.EventType] ?: it[DiscordMessageHeaderAccessor.Op])?.toString()?.toLowerCase()?.toCamelCase()
+                            val type = (it[DiscordMessageHeaderAccessor.EventType] ?: it[DiscordMessageHeaderAccessor.Op]!!).toString().toLowerCase().toCamelCase()
                             "discord.$type.inbound"
                         },
                         {
