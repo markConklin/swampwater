@@ -13,12 +13,12 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
 
-class RateLimitingInterceptor(var clock: Clock = Clock.systemUTC()) : ClientHttpRequestInterceptor {
+class RateLimitingInterceptor(private var clock: Clock = Clock.systemUTC()) : ClientHttpRequestInterceptor {
     private var global = now(clock).toEpochMilli()
     private val limits = ConcurrentHashMap<String, Long>()
 
     override fun intercept(request: HttpRequest, body: ByteArray?, execution: ClientHttpRequestExecution): ClientHttpResponse {
-        val destination = request.uri.toString()
+        val destination = request.uri.normalize().toString()
         while (true) {
             val milli = now(clock).toEpochMilli()
             (max(global, limits.getOrPut(destination, { milli })) - milli).let {
@@ -26,17 +26,15 @@ class RateLimitingInterceptor(var clock: Clock = Clock.systemUTC()) : ClientHttp
             }
             val response = execution.execute(request, body)
             if (response.statusCode == TOO_MANY_REQUESTS) {
-                with(response.headers) {
-                    val retry: Long = rateLimitReset!!
-                    if (isRateLimitGlobal) {
-                        global = retry
-                    } else {
-                        limits[destination] = retry
-                    }
+                val retry: Long = response.headers.rateLimitReset
+                if (response.headers.isRateLimitGlobal) {
+                    global = retry
+                } else {
+                    limits[destination] = retry
                 }
             } else {
                 if (response.headers.rateLimitRemaining == 0) {
-                    limits[destination] = response.headers.rateLimitReset!!
+                    limits[destination] = response.headers.rateLimitReset
                 }
                 return response
             }
@@ -44,7 +42,7 @@ class RateLimitingInterceptor(var clock: Clock = Clock.systemUTC()) : ClientHttp
     }
 }
 
-val HttpHeaders.rateLimitReset: Long?
+val HttpHeaders.rateLimitReset: Long
     get() = SECONDS.toMillis(this.getFirst("X-RateLimit-Reset")?.toLong() ?: 0)
 
 val HttpHeaders.rateLimitRemaining: Int?

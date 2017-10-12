@@ -13,7 +13,7 @@ class RateLimitingSession(session: Session) : Session by session {
 
     override fun getBasicRemote(): RemoteEndpoint.Basic = basicRemote
 
-    class RateLimitingBasicRemote(val limiter: RateLimiter, val remote: RemoteEndpoint.Basic) : RemoteEndpoint.Basic by remote {
+    class RateLimitingBasicRemote(private val limiter: RateLimiter, private val remote: RemoteEndpoint.Basic) : RemoteEndpoint.Basic by remote {
         @Synchronized
         override fun sendObject(data: Any?) {
             limiter.acquire()

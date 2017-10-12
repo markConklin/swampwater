@@ -7,7 +7,7 @@ import org.springframework.messaging.handler.annotation.Payload
 import org.springframework.stereotype.Component
 
 @Component
-open class MessageListener(val jokes: List<Joke>) {
+open class MessageListener(private val jokes: List<Joke>) {
     var self: String? = null
         @ServiceActivator(inputChannel = "discord.ready.inbound")
         set(@Payload("user.id") value) {

@@ -94,26 +94,24 @@ open class Application(
     open fun inboundGatewayProducer() = DiscordGatewayMessageProducer().apply { gatewayContainer().eventHandler = this }
 
     @Bean
-    open fun gatewayInboundFlow(): IntegrationFlow {
-        return from(inboundGatewayProducer())
-                .route<Map<String, Any>, String>(
-                        {
-                            val type = (it[DiscordMessageHeaderAccessor.EventType] ?: it[DiscordMessageHeaderAccessor.Op]!!).toString().toLowerCase().toCamelCase()
-                            "discord.$type.inbound"
-                        },
-                        {
-                            it
-                                    .subFlowMapping("discord.messageCreate.inbound", { sf ->
-                                        sf
-                                                .enrichHeaders { h -> h.headerExpression("discord-channel", "payload.channelId") }
-                                                .channel("discord.messageCreate.inbound")
-                                    })
-                                    .resolutionRequired(false)
-                                    .defaultOutputChannel("nullChannel")
-
-                        })
-                .get()
-    }
+    open fun gatewayInboundFlow(): IntegrationFlow = from(inboundGatewayProducer())
+            .route<Map<String, Any>, String>(
+                    {
+                        val type = (it[DiscordMessageHeaderAccessor.EventType] ?: it[DiscordMessageHeaderAccessor.Op]!!).toString().toLowerCase().toCamelCase()
+                        "discord.$type.inbound"
+                    },
+                    {
+                        it
+                                .subFlowMapping("discord.messageCreate.inbound") { sf ->
+                                    sf
+                                            .enrichHeaders { h -> h.headerExpression("discord-channel", "payload.channelId") }
+                                            .channel("discord.messageCreate.inbound")
+                                }
+                                .resolutionRequired(false)
+                                .defaultOutputChannel("nullChannel")
+                    }
+            )
+            .get()
 
     @Bean("discord.message.outbound")
     open fun discordMessageOutbound(): MessageChannel = queue().get()
@@ -123,17 +121,14 @@ open class Application(
             .split()
             .transform { it: String -> CreateMessage(it) }
             .enrichHeaders(mutableMapOf(CONTENT_TYPE to APPLICATION_JSON_VALUE as Any))
-            .handle(Http
-                    .outboundChannelAdapter<CreateMessage>({ "$baseUrl/channels/${it.headers["discord-channel"]}/messages" }, restTemplate)
-                    .get())
+            .handle(Http.outboundChannelAdapter<CreateMessage>({ "$baseUrl/channels/${it.headers["discord-channel"]}/messages" }, restTemplate))
             .get()
 
     @Bean
-    open fun statusUpdateFlow(): IntegrationFlow = from(Http
-            .inboundGateway("/status")
-            .requestPayloadType(SetStatusRequest::class.java)
-            .requestMapping { it.methods(POST) }
-            .get())
+    open fun statusUpdateFlow(): IntegrationFlow = from(
+            Http.inboundGateway("/status")
+                    .requestPayloadType(SetStatusRequest::class.java)
+                    .requestMapping { it.methods(POST) })
             .transform { it: SetStatusRequest -> GameStatusUpdate(it.idle, it.game) }
             .enrichHeaders(mutableMapOf(DiscordMessageHeaderAccessor.Op to Op.StatusUpdate as Any))
             .handle(outboundGatewayHandler())

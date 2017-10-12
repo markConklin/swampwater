@@ -6,6 +6,6 @@ fun String.beginWithUpperCase() = when (length) {
     else -> this[0].toUpperCase() + this.substring(1)
 }
 
-fun String.toCamelCase() = split('_').map { it.beginWithUpperCase() }.joinToString("").decapitalize()
+fun String.toCamelCase() = split('_').joinToString("") { it.beginWithUpperCase() }.decapitalize()
 
 

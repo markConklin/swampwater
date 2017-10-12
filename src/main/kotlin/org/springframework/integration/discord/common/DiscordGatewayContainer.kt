@@ -20,7 +20,6 @@ import javax.websocket.ContainerProvider.getWebSocketContainer
 
 open class DiscordGatewayContainer(private val gatewayUrl: URI, val authorization: String, val scheduler: TaskScheduler, val clock: Clock = Clock.systemUTC()) : SmartLifecycle, Endpoint() {
     companion object {
-        val missingHeartbeatACK = CloseReason(CloseReason.CloseCodes.getCloseCode(4000), "Missing Heartbeat ACK")
         val logger: Log = getLog(DiscordGatewayContainer::class.java)
     }
 
@@ -139,3 +138,5 @@ class DispatchTextDecoder : ConvertingEncoderDecoderSupport.TextDecoder<Dispatch
 class DispatchTextEncoder : ConvertingEncoderDecoderSupport.TextEncoder<Dispatch>() {
     override fun getApplicationContext() = ApplicationContextProvider.context
 }
+
+val missingHeartbeatACK = CloseReason(CloseReason.CloseCodes.getCloseCode(4000), "Missing Heartbeat ACK")
