@@ -22,7 +22,6 @@ dependencies {
     'org.springframework.boot:spring-boot-starter-integration',
     'org.springframework.boot:spring-boot-starter-web',
     'org.springframework.boot:spring-boot-starter-websocket',
-    'org.springframework.integration:spring-integration-http',
     'org.springframework.integration:spring-integration-websocket'
 
   testCompile 'org.amshove.kluent:kluent:1.29',

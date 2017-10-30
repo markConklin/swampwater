@@ -1,0 +1,27 @@
+plugins {
+  id 'org.jetbrains.kotlin.jvm' version '1.1.51'
+  id 'org.springframework.boot' version '1.5.7.RELEASE'
+}
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+  jcenter()
+  maven { url "http://dl.bintray.com/jetbrains/spek" }
+}
+
+dependencies {
+  compile 'org.apache.httpcomponents:httpclient',
+    "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version",
+    'org.springframework.boot:spring-boot-starter-actuator',
+    'org.springframework.boot:spring-boot-starter-integration',
+    'org.springframework.boot:spring-boot-starter-web',
+    'org.springframework.integration:spring-integration-http',
+    'org.springframework.integration:spring-integration-websocket'
+
+  compile project(':spring-integration-discord')
+}
+
+processResources {
+  expand(project.properties)
+}
