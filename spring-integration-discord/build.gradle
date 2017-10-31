@@ -1,23 +1,15 @@
 plugins {
   id 'com.zoltu.git-versioning' version '3.0.3'
-  id 'org.jetbrains.kotlin.jvm' version '1.1.51'
   id 'org.junit.platform.gradle.plugin' version '1.0.1'
-  id 'org.springframework.boot' version '1.5.7.RELEASE'
-}
-
-repositories {
-  mavenLocal()
-  mavenCentral()
-  jcenter()
-  maven { url "http://dl.bintray.com/jetbrains/spek" }
 }
 
 dependencies {
-  compile 'org.apache.httpcomponents:httpclient',
+  compile 'org.springframework.integration:spring-integration-core',
+    'org.apache.httpcomponents:httpclient',
     'com.fasterxml.jackson.datatype:jackson-datatype-jsr310',
     'com.fasterxml.jackson.module:jackson-module-kotlin',
     'com.google.guava:guava:22.0',
-    "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version",
+    'org.jetbrains.kotlin:kotlin-stdlib',
     'org.springframework.boot:spring-boot-starter-actuator',
     'org.springframework.boot:spring-boot-starter-integration',
     'org.springframework.boot:spring-boot-starter-web',
@@ -25,24 +17,16 @@ dependencies {
     'org.springframework.integration:spring-integration-websocket'
 
   testCompile 'org.amshove.kluent:kluent:1.29',
-    "org.jetbrains.spek:spek-api:$spek_version"
+    'org.jetbrains.spek:spek-api'
 
   testRuntime 'org.junit.platform:junit-platform-runner:1.0.1',
-    "org.jetbrains.spek:spek-junit-platform-engine:$spek_version"
-}
-
-processResources {
-  expand(project.properties)
+    'org.jetbrains.spek:spek-junit-platform-engine'
 }
 
 jar {
   manifest {
     attributes(
-      'Implementation-Title': rootProject.name
+      'Implementation-Title': project.name
     )
   }
-}
-
-bootRepackage {
-  enabled = false
 }
