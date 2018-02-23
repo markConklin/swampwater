@@ -7,7 +7,7 @@ import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.util.zip.DeflaterOutputStream
 
-class DispatchToByteBufferConverter(val objectMapper: ObjectMapper) : Converter<Dispatch, ByteBuffer> {
+class DispatchToByteBufferConverter(private val objectMapper: ObjectMapper) : Converter<Dispatch, ByteBuffer> {
     override fun convert(source: Dispatch): ByteBuffer {
         val result = ByteArrayOutputStream()
         DeflaterOutputStream(result).use { s -> objectMapper.writeValue(s, source) }

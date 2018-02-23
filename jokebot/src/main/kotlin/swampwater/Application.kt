@@ -41,7 +41,7 @@ import java.util.concurrent.Executors.newSingleThreadScheduledExecutor
 import java.util.concurrent.TimeUnit.MILLISECONDS
 
 
-@SpringBootApplication(scanBasePackages = arrayOf("org.springframework.integration.discord", "swampwater"))
+@SpringBootApplication(scanBasePackages = ["org.springframework.integration.discord", "swampwater"])
 @EnableIntegration
 open class Application(
         builder: RestTemplateBuilder,
@@ -59,7 +59,7 @@ open class Application(
             .build()
 
     private val gatewayUrl: URI by lazy {
-        fromUriString(restTemplate.getForObject("$baseUrl/gateway/bot", Gateway::class.java).url)
+        fromUriString(restTemplate.getForObject("{rootUri}/gateway/bot", Gateway::class.java, baseUrl).url)
                 .queryParam("encoding", "json")
                 .queryParam("v", version)
                 .build()
@@ -97,7 +97,8 @@ open class Application(
     open fun gatewayInboundFlow(): IntegrationFlow = from(inboundGatewayProducer())
             .route<Map<String, Any>, String>(
                     {
-                        val type = (it[DiscordMessageHeaderAccessor.EventType] ?: it[DiscordMessageHeaderAccessor.Op]!!).toString().toLowerCase().toCamelCase()
+                        val type = (it[DiscordMessageHeaderAccessor.EventType]
+                                ?: it[DiscordMessageHeaderAccessor.Op]!!).toString().toLowerCase().toCamelCase()
                         "discord.$type.inbound"
                     },
                     {
@@ -121,7 +122,9 @@ open class Application(
             .split()
             .transform { it: String -> CreateMessage(it) }
             .enrichHeaders(mutableMapOf(CONTENT_TYPE to APPLICATION_JSON_VALUE as Any))
-            .handle(Http.outboundChannelAdapter<CreateMessage>({ "$baseUrl/channels/${it.headers["discord-channel"]}/messages" }, restTemplate))
+            .handle(Http.outboundChannelAdapter("{rootUri}/channels/{discord-channel}/messages", restTemplate)
+                    .uriVariable("discord-channel", "headers['discord-channel']")
+                    .uriVariable("rootUri", "'$baseUrl'"))
             .get()
 
     @Bean

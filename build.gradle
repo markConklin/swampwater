@@ -1,12 +1,15 @@
 buildscript {
   repositories {
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
     mavenLocal()
     mavenCentral()
     jcenter()
   }
   dependencies {
-    classpath 'io.spring.gradle:dependency-management-plugin:1.0.3.RELEASE',
-      'org.jetbrains.kotlin:kotlin-gradle-plugin:1.1.51'
+    classpath 'io.spring.gradle:dependency-management-plugin:1.0.4.RELEASE',
+      'org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.21'
   }
 }
 
@@ -23,10 +26,10 @@ subprojects {
 
   dependencyManagement {
     imports {
-      mavenBom 'io.spring.platform:platform-bom:Brussels-SR5'
+      mavenBom 'io.spring.platform:platform-bom:Brussels-SR7'
     }
     dependencies {
-      dependency 'org.jetbrains.kotlin:kotlin-stdlib:1.1.51'
+      dependency 'org.jetbrains.kotlin:kotlin-stdlib:1.2.21'
       dependencySet(group: 'org.jetbrains.spek', version: '1.1.5') {
         entry 'spek-api'
         entry 'spek-junit-platform-engine'

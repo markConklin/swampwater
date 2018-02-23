@@ -5,6 +5,6 @@ import org.springframework.core.convert.converter.Converter
 import swampwater.discord.Dispatch
 
 
-class DispatchToStringConverter(val objectMapper: ObjectMapper) : Converter<Dispatch, String> {
+class DispatchToStringConverter(private val objectMapper: ObjectMapper) : Converter<Dispatch, String> {
     override fun convert(source: Dispatch): String = objectMapper.writeValueAsString(source)
 }

@@ -8,7 +8,7 @@ dependencies {
     'org.apache.httpcomponents:httpclient',
     'com.fasterxml.jackson.datatype:jackson-datatype-jsr310',
     'com.fasterxml.jackson.module:jackson-module-kotlin',
-    'com.google.guava:guava:22.0',
+    'com.google.guava:guava',
     'org.jetbrains.kotlin:kotlin-stdlib',
     'org.springframework.boot:spring-boot-starter-actuator',
     'org.springframework.boot:spring-boot-starter-integration',
@@ -19,7 +19,7 @@ dependencies {
   testCompile 'org.amshove.kluent:kluent:1.29',
     'org.jetbrains.spek:spek-api'
 
-  testRuntime 'org.junit.platform:junit-platform-runner:1.0.1',
+  testRuntime 'org.junit.platform:junit-platform-runner:1.0.2',
     'org.jetbrains.spek:spek-junit-platform-engine'
 }
 

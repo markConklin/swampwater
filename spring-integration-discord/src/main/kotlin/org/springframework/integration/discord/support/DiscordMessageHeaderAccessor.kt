@@ -8,10 +8,10 @@ import swampwater.discord.Op
 
 class DiscordMessageHeaderAccessor : MessageHeaderAccessor {
     companion object {
-        val Op = "discord-op"
-        val EventType = "discord-type"
-        val Sequence = "discord-sequence"
-        val SessionId = "discord-session-id"
+        const val Op = "discord-op"
+        const val EventType = "discord-type"
+        const val Sequence = "discord-sequence"
+        const val SessionId = "discord-session-id"
     }
 
     constructor(dispatch: Dispatch) {

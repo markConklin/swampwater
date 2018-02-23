@@ -7,6 +7,6 @@ import swampwater.discord.Dispatch
 import java.nio.ByteBuffer
 import java.util.zip.InflaterInputStream
 
-class ByteBufferToDispatchConverter(val objectMapper: ObjectMapper) : Converter<ByteBuffer, Dispatch> {
+class ByteBufferToDispatchConverter(private val objectMapper: ObjectMapper) : Converter<ByteBuffer, Dispatch> {
     override fun convert(source: ByteBuffer): Dispatch = InflaterInputStream(ByteBufferBackedInputStream(source)).use { s -> objectMapper.readValue(s, Dispatch::class.java) }
 }
