@@ -1,1 +1,1 @@
-ons](https://discordapp.com/developers/docs/topics/permissions)`}`
+example of using swampwater to build a joke bot
