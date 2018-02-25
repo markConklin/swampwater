@@ -10,4 +10,4 @@ import swampwater.discord.VoiceGuildChannel
         JsonSubTypes.Type(value = TextGuildChannel::class, name = "0"),
         JsonSubTypes.Type(value = VoiceGuildChannel::class, name = "2")
 )
-abstract class GuildChannelMixin
+interface GuildChannelMixin

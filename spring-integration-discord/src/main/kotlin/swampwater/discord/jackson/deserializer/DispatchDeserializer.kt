@@ -58,7 +58,7 @@ object DispatchDeserializer : StdDeserializer<Dispatch>(Dispatch::class.java) {
             if (it is NullNode) {
                 null
             } else {
-                val type = mapping[op]?.get(t)
+                val type = mapping.get(op)?.get(t)
                 type ?: context.reportMappingException("unrecognized op/type %s/%s", op, t)
                 it.traverse(parser.codec).readValueAs(type)
             }
