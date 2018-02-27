@@ -7,16 +7,13 @@ dependencies {
   compile 'org.springframework.integration:spring-integration-core',
     'org.apache.httpcomponents:httpclient',
     'com.fasterxml.jackson.datatype:jackson-datatype-jsr310',
-    'com.fasterxml.jackson.module:jackson-module-kotlin',
+    'com.fasterxml.jackson.module:jackson-module-kotlin:2.8.11.1',
     'com.google.guava:guava',
     'org.jetbrains.kotlin:kotlin-stdlib',
-    'org.springframework.boot:spring-boot-starter-actuator',
     'org.springframework.boot:spring-boot-starter-integration',
-    'org.springframework.boot:spring-boot-starter-web',
-    'org.springframework.boot:spring-boot-starter-websocket',
-    'org.springframework.integration:spring-integration-websocket'
+    'org.springframework.boot:spring-boot-starter-websocket'
 
-  testCompile 'org.amshove.kluent:kluent:1.29',
+  testCompile 'org.amshove.kluent:kluent:1.35',
     'org.jetbrains.spek:spek-api'
 
   testRuntime 'org.junit.platform:junit-platform-runner:1.0.2',

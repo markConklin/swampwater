@@ -1,7 +1,9 @@
 package swampwater.discord
 
 enum class Status {
-    Online,
-    Offline,
-    Idle
+    online,
+    dnd,
+    idle,
+    invisible,
+    offline
 }

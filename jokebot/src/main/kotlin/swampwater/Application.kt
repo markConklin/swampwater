@@ -132,7 +132,7 @@ open class Application(
             Http.inboundGateway("/status")
                     .requestPayloadType(SetStatusRequest::class.java)
                     .requestMapping { it.methods(POST) })
-            .transform { it: SetStatusRequest -> GameStatusUpdate(it.idle, it.game) }
+            .transform { it: SetStatusRequest -> GameStatusUpdate(it.idle, it.game, it.status, it.afk) }
             .enrichHeaders(mutableMapOf(DiscordMessageHeaderAccessor.Op to Op.StatusUpdate as Any))
             .handle(outboundGatewayHandler())
             .get()
