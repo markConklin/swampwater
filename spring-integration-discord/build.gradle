@@ -7,7 +7,7 @@ dependencies {
   compile 'org.springframework.integration:spring-integration-core',
     'org.apache.httpcomponents:httpclient',
     'com.fasterxml.jackson.datatype:jackson-datatype-jsr310',
-    'com.fasterxml.jackson.module:jackson-module-kotlin:2.8.11.1',
+    'com.fasterxml.jackson.module:jackson-module-kotlin:2.9.4',
     'com.google.guava:guava',
     'org.jetbrains.kotlin:kotlin-stdlib',
     'org.springframework.boot:spring-boot-starter-integration',
