@@ -38,4 +38,8 @@ subprojects {
   }
 
   task allDeps(type: DependencyReportTask) {}
+
+  test {
+    useJUnitPlatform()
+  }
 }
