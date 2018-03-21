@@ -9,7 +9,7 @@ buildscript {
   }
   dependencies {
     classpath 'io.spring.gradle:dependency-management-plugin:1.0.4.RELEASE',
-      'org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.21'
+      'org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.30'
   }
 }
 
@@ -29,7 +29,7 @@ subprojects {
       mavenBom 'io.spring.platform:platform-bom:Brussels-SR7'
     }
     dependencies {
-      dependency 'org.jetbrains.kotlin:kotlin-stdlib:1.2.21'
+      dependency 'org.jetbrains.kotlin:kotlin-stdlib:1.2.30'
       dependencySet(group: 'org.jetbrains.spek', version: '1.1.5') {
         entry 'spek-api'
         entry 'spek-junit-platform-engine'
