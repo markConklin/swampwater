@@ -1,0 +1,4 @@
+#!/bin/bash
+IFS=-
+set -- `git describe --always --tags --match "v/*"`
+echo `basename $1`.$2+$3
